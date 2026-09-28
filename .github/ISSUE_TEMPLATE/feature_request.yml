@@ -1,0 +1,20 @@
+name: Feature request
+description: An idea for the SDKs, the examples or the API.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to build?
+      description: The use case matters more than the solution — tell us what your application or agent needs to do.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would help
+      description: The API, SDK method or example you would like, if you have one in mind.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you do today instead

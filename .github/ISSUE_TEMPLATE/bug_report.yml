@@ -1,0 +1,46 @@
+name: Bug report
+description: Something in an Anpheros SDK or example does not work as documented.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Please **never include API keys, tokens or real patient data** — use the sandbox and synthetic patients.
+        Security problems go to contact@anpheros.com (see SECURITY.md), not here.
+  - type: dropdown
+    id: sdk
+    attributes:
+      label: Where
+      options:
+        - TypeScript SDK (@anpheros/sdk)
+        - Dart / Flutter SDK (anpheros_sdk)
+        - An example
+        - The API itself
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: SDK version and runtime
+      placeholder: "@anpheros/sdk 0.1.2 on Node 22 / anpheros_sdk 0.1.2 on Flutter 3.x"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: What you did
+      description: The smallest code or sequence of calls that shows the problem.
+      render: ts
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected, and what happened
+    validations:
+      required: true
+  - type: input
+    id: request_id
+    attributes:
+      label: Anpheros-Request-Id (if an API call was involved)
+      placeholder: the value of the Anpheros-Request-Id response header

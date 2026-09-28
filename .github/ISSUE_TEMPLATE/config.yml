@@ -1,0 +1,14 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Developer guides
+    url: https://developers.anpheros.com/guides/
+    about: How to build on Anpheros — FHIR, API, consent, webhooks, SDKs, AI.
+  - name: API reference
+    url: https://developers.anpheros.com/docs
+    about: Every endpoint with its request and response.
+  - name: Request access to the platform
+    url: https://platform.anpheros.com/
+    about: Anpheros Platform is in private beta; access is by request.
+  - name: Report a security issue
+    url: https://github.com/anpheros/.github/blob/main/SECURITY.md
+    about: Please do not open a public issue for security problems.
