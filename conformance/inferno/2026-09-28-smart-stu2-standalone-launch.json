@@ -1,0 +1,287 @@
+{
+ "suite": "smart_stu2",
+ "group": "smart_stu2-smart_full_standalone_launch",
+ "group_title": "Standalone Launch",
+ "fhir_base": "https://platform.anpheros.com/fhir/R4",
+ "exported_at": "2026-09-28T16:06:56Z",
+ "platform": {
+  "name": "Anpheros Platform",
+  "version": "0.3.0"
+ },
+ "kit": {
+  "kit_repo": "inferno-framework/smart-app-launch-test-kit",
+  "kit_ref": "v1.0.3",
+  "kit_commit": "980e54e4ed632b28267d797013399a8588772174",
+  "kit_version": "1.0.3",
+  "inferno_core": "1.4.3"
+ },
+ "counts": {
+  "tests": {
+   "pass": 22
+  },
+  "group_rollups": {
+   "pass": 8,
+   "wait": 2
+  }
+ },
+ "counts_note": "Entries without a test_id are group roll-ups. A group is 'wait' while Inferno waits for the authorization redirect; the later entry for the same group has its final result.",
+ "redaction_note": "OAuth parameter values (client_id, state, code, code_challenge), tokens and e-mail addresses inside result messages are replaced with [redacted]. The HTTP requests Inferno recorded are not exported.",
+ "results": [
+  {
+   "test_id": "smart_stu2-smart_full_standalone_launch-smart_discovery_stu2-well_known_endpoint",
+   "test_group_id": null,
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:46.497+00:00"
+  },
+  {
+   "test_id": "smart_stu2-smart_full_standalone_launch-smart_discovery_stu2-well_known_capabilities_stu2",
+   "test_group_id": null,
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:46.504+00:00"
+  },
+  {
+   "test_id": null,
+   "test_group_id": "smart_stu2-smart_full_standalone_launch-smart_discovery_stu2",
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:46.505+00:00"
+  },
+  {
+   "test_id": "smart_stu2-smart_full_standalone_launch-smart_standalone_launch_stu2-standalone_auth_tls",
+   "test_group_id": null,
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:48.257+00:00"
+  },
+  {
+   "test_id": "smart_stu2-smart_full_standalone_launch-smart_standalone_launch_stu2-smart_app_redirect_stu2",
+   "test_group_id": null,
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:50.248+00:00"
+  },
+  {
+   "test_id": null,
+   "test_group_id": "smart_stu2-smart_full_standalone_launch-smart_standalone_launch_stu2",
+   "test_suite_id": null,
+   "result": "wait",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:48.273+00:00"
+  },
+  {
+   "test_id": null,
+   "test_group_id": "smart_stu2-smart_full_standalone_launch",
+   "test_suite_id": null,
+   "result": "wait",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:48.276+00:00"
+  },
+  {
+   "test_id": null,
+   "test_group_id": "smart_stu2-smart_full_standalone_launch-smart_discovery_stu2",
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:50.264+00:00"
+  },
+  {
+   "test_id": "smart_stu2-smart_full_standalone_launch-smart_standalone_launch_stu2-smart_code_received",
+   "test_group_id": null,
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:50.272+00:00"
+  },
+  {
+   "test_id": "smart_stu2-smart_full_standalone_launch-smart_standalone_launch_stu2-standalone_token_tls",
+   "test_group_id": null,
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:52.198+00:00"
+  },
+  {
+   "test_id": "smart_stu2-smart_full_standalone_launch-smart_standalone_launch_stu2-smart_token_exchange",
+   "test_group_id": null,
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:52.820+00:00"
+  },
+  {
+   "test_id": "smart_stu2-smart_full_standalone_launch-smart_standalone_launch_stu2-smart_token_response_body",
+   "test_group_id": null,
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:52.835+00:00"
+  },
+  {
+   "test_id": "smart_stu2-smart_full_standalone_launch-smart_standalone_launch_stu2-smart_token_response_headers",
+   "test_group_id": null,
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:52.839+00:00"
+  },
+  {
+   "test_id": null,
+   "test_group_id": "smart_stu2-smart_full_standalone_launch-smart_standalone_launch_stu2",
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:52.841+00:00"
+  },
+  {
+   "test_id": "smart_stu2-smart_full_standalone_launch-smart_openid_connect-smart_openid_decode_id_token",
+   "test_group_id": null,
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:52.846+00:00"
+  },
+  {
+   "test_id": "smart_stu2-smart_full_standalone_launch-smart_openid_connect-smart_openid_retrieve_configuration",
+   "test_group_id": null,
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:53.297+00:00"
+  },
+  {
+   "test_id": "smart_stu2-smart_full_standalone_launch-smart_openid_connect-smart_openid_required_configuration_fields",
+   "test_group_id": null,
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:53.304+00:00"
+  },
+  {
+   "test_id": "smart_stu2-smart_full_standalone_launch-smart_openid_connect-smart_openid_retrieve_jwks",
+   "test_group_id": null,
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:53.784+00:00"
+  },
+  {
+   "test_id": "smart_stu2-smart_full_standalone_launch-smart_openid_connect-smart_openid_token_header",
+   "test_group_id": null,
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:53.794+00:00"
+  },
+  {
+   "test_id": "smart_stu2-smart_full_standalone_launch-smart_openid_connect-smart_openid_token_payload",
+   "test_group_id": null,
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:53.799+00:00"
+  },
+  {
+   "test_id": "smart_stu2-smart_full_standalone_launch-smart_openid_connect-smart_openid_fhir_user_claim",
+   "test_group_id": null,
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:54.335+00:00"
+  },
+  {
+   "test_id": null,
+   "test_group_id": "smart_stu2-smart_full_standalone_launch-smart_openid_connect",
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:54.343+00:00"
+  },
+  {
+   "test_id": "smart_stu2-smart_full_standalone_launch-smart_standalone_refresh_without_scopes-smart_token_refresh_stu2",
+   "test_group_id": null,
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:55.601+00:00"
+  },
+  {
+   "test_id": "smart_stu2-smart_full_standalone_launch-smart_standalone_refresh_without_scopes-smart_token_refresh_body",
+   "test_group_id": null,
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:55.614+00:00"
+  },
+  {
+   "test_id": "smart_stu2-smart_full_standalone_launch-smart_standalone_refresh_without_scopes-smart_token_response_headers",
+   "test_group_id": null,
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:55.617+00:00"
+  },
+  {
+   "test_id": null,
+   "test_group_id": "smart_stu2-smart_full_standalone_launch-smart_standalone_refresh_without_scopes",
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:55.619+00:00"
+  },
+  {
+   "test_id": "smart_stu2-smart_full_standalone_launch-smart_standalone_refresh_with_scopes-smart_token_refresh_stu2",
+   "test_group_id": null,
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:56.163+00:00"
+  },
+  {
+   "test_id": "smart_stu2-smart_full_standalone_launch-smart_standalone_refresh_with_scopes-smart_token_refresh_body",
+   "test_group_id": null,
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:56.177+00:00"
+  },
+  {
+   "test_id": "smart_stu2-smart_full_standalone_launch-smart_standalone_refresh_with_scopes-smart_token_response_headers",
+   "test_group_id": null,
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:56.181+00:00"
+  },
+  {
+   "test_id": null,
+   "test_group_id": "smart_stu2-smart_full_standalone_launch-smart_standalone_refresh_with_scopes",
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:56.183+00:00"
+  },
+  {
+   "test_id": null,
+   "test_group_id": "smart_stu2-smart_full_standalone_launch",
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:56.189+00:00"
+  },
+  {
+   "test_id": null,
+   "test_group_id": "smart_stu2-smart_full_standalone_launch",
+   "test_suite_id": null,
+   "result": "pass",
+   "result_message": null,
+   "updated_at": "2026-09-28T16:06:56.192+00:00"
+  }
+ ]
+}

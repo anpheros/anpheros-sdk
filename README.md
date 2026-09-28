@@ -59,6 +59,10 @@ The record is made of standard FHIR R4 resources — 26 types, including `Observ
 
 The examples run against the sandbox, a separate database with synthetic patients. The platform is in private beta; access is by request on [platform.anpheros.com](https://platform.anpheros.com/).
 
+## Conformance
+
+Raw test results, published so they can be checked (test results, not certifications): [conformance/](https://github.com/anpheros/anpheros-sdk/tree/main/conformance). On 28 September 2026 the Standalone Launch group of the Inferno SMART App Launch STU2 test kit (v1.0.3) passed 22 of 22 tests against the platform. EHR launch is not supported.
+
 ## Documentation
 
 - Developer guides: https://developers.anpheros.com/guides/
