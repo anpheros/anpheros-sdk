@@ -2,7 +2,7 @@
 
 Runnable examples of building on **Anpheros**, interoperable medical-data infrastructure: a patient-controlled HL7 FHIR R4 record per person and an API for healthcare applications, software and AI services.
 
-Every example runs against the **sandbox** — a separate database with synthetic patients — with a sandbox key (`sk_test_…`). Sandbox keys cannot reach real patient data. During the private beta, access is by request on [platform.anpheros.com](https://platform.anpheros.com/).
+Every example runs against the free **sandbox** with a sandbox key (`sk_test_…`): a separate database where your sandbox project has its own 30 synthetic patients. Sandbox keys cannot reach real patient data. Get one instantly: sign in with Google on the [dashboard](https://platform.anpheros.com/dashboard/) and press *Get a sandbox key*.
 
 | Example | Shows | Language |
 |---|---|---|

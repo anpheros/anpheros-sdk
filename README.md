@@ -11,6 +11,12 @@
 
 Developers building patient and family health apps, medical-app backends, clinic and laboratory integrations, and AI assistants or agents that need a patient's structured medical context — without designing a medical database, a consent system and an audit trail from scratch.
 
+## Get a sandbox key
+
+The sandbox is free and self-service. Sign in with Google on the [dashboard](https://platform.anpheros.com/dashboard/) and press **Get a sandbox key**: you get a sandbox project and a key instantly. Every sandbox project comes with its own 30 synthetic patients — six months of conditions, medications, allergies, lab results and vital signs — that you can change freely and reset at any time. Sandbox keys (`sk_test_…`) never reach real patient data.
+
+When you go live, production is for verified organisations with a data processing agreement, and the first month of production is free.
+
 ## Connect
 
 ```ts
@@ -57,7 +63,7 @@ The record is made of standard FHIR R4 resources — 26 types, including `Observ
 | [ai-context-llm](https://github.com/anpheros/anpheros-sdk/tree/main/examples/ai-context-llm) | a question about a record answered by a model of your choice (local or hosted) |
 | [fhir-transaction](https://github.com/anpheros/anpheros-sdk/tree/main/examples/fhir-transaction) | a FHIR R4 transaction bundle and the resulting International Patient Summary |
 
-The examples run against the sandbox, a separate database with synthetic patients. The platform is in private beta; access is by request on [platform.anpheros.com](https://platform.anpheros.com/).
+The examples run against the free sandbox, where each sandbox project has its own 30 synthetic patients — see [Get a sandbox key](#get-a-sandbox-key).
 
 ## Conformance
 
