@@ -1,0 +1,22 @@
+name: anpheros_sdk
+description: Dart client for Anpheros Platform, interoperable medical-data infrastructure — HL7 FHIR R4 records, patient consent (OAuth 2.1 / SMART on FHIR), provenance, AI context API.
+version: 0.1.2
+repository: https://github.com/anpheros/anpheros-sdk/tree/main/dart/anpheros_sdk
+homepage: https://developers.anpheros.com/guides/sdks
+documentation: https://developers.anpheros.com/guides/
+issue_tracker: https://github.com/anpheros/anpheros-sdk/issues
+topics:
+  - fhir
+  - hl7
+  - healthcare
+  - oauth
+  - api-client
+environment:
+  sdk: ^3.4.0
+dependencies:
+  http: ^1.2.0
+  crypto: ^3.0.3
+  meta: ^1.12.0
+dev_dependencies:
+  test: ^1.25.0
+  lints: ^4.0.0

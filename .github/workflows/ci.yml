@@ -1,0 +1,29 @@
+# CI of the public repository anpheros/anpheros-sdk (this folder is published there as the repository root).
+# Checks both SDKs and that every example still compiles against the published packages.
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  dart:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+      - run: cd dart/anpheros_sdk && dart pub get && dart analyze && dart test
+      - run: cd examples/quickstart-dart && dart pub get && dart analyze
+  typescript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - run: cd ts && npm ci && npm test
+      - name: Examples load against the published package
+        run: |
+          for d in quickstart-ts consent-app-ts ai-context-llm; do
+            (cd "examples/$d" && npm install --no-audit --no-fund && node --check *.mjs)
+          done
+      - name: FHIR example is valid JSON
+        run: node -e "JSON.parse(require('fs').readFileSync('examples/fhir-transaction/bundle.json','utf8'))"

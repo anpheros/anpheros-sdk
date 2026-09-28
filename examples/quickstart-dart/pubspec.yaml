@@ -1,0 +1,7 @@
+name: anpheros_quickstart
+description: Write and read a patient's FHIR R4 record through the Anpheros Platform API (sandbox).
+publish_to: none
+environment:
+  sdk: ^3.4.0
+dependencies:
+  anpheros_sdk: ^0.1.1
