@@ -15,7 +15,7 @@ Developers building patient and family health apps, medical-app backends, clinic
 
 The sandbox is free and self-service. Sign in with Google on the [dashboard](https://platform.anpheros.com/dashboard/) and press **Get a sandbox key**: you get a sandbox project and a key instantly. Every sandbox project comes with its own 30 synthetic patients — six months of conditions, medications, allergies, lab results and vital signs — that you can change freely and reset at any time. Sandbox keys (`sk_test_…`) never reach real patient data.
 
-When you go live, production is for verified organisations with a data processing agreement, and the first month of production is free.
+When you go live, production is for verified organisations with a data processing agreement, and production starts at €49 a month with the first month free ([pricing](https://developers.anpheros.com/guides/pricing)).
 
 ## Connect
 
