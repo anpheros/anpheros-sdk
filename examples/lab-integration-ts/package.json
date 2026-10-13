@@ -1,0 +1,16 @@
+{
+  "name": "anpheros-lab-integration-ts",
+  "private": true,
+  "description": "Import a synthetic laboratory report (HL7 v2 ORU^R01 or CSV) into FHIR R4 Observations through the Anpheros Platform API (sandbox).",
+  "type": "module",
+  "scripts": {
+    "start": "node import.mjs",
+    "csv": "node import.mjs csv"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@anpheros/sdk": "^0.1.2"
+  }
+}

@@ -10,13 +10,15 @@ Every example runs against the free **sandbox** with a sandbox key (`sk_test_…
 | [quickstart-dart](quickstart-dart) | the same flow from Dart (and Flutter) | Dart 3.4+ |
 | [consent-app-ts](consent-app-ts) | a web app that asks a person for consent (OAuth 2.1 + PKCE, SMART on FHIR scopes) and reads their record | TypeScript / Node 18+ |
 | [ai-context-llm](ai-context-llm) | a question about a patient's record answered by a model of your choice (local or hosted), using the context API | TypeScript / Node 18+ |
+| [backend-ts](backend-ts) | a healthcare app backend: server-side key, patient list, record summary, a validated write, FHIR export, Anpheros errors mapped to clear answers | TypeScript / Node 18+ |
+| [lab-integration-ts](lab-integration-ts) | a synthetic lab report (HL7 v2 ORU^R01 or CSV) → FHIR R4 laboratory Observations, LOINC mapping, safe re-sending | TypeScript / Node 18+ |
 | [fhir-transaction](fhir-transaction) | a FHIR R4 transaction bundle (Patient, Observation, Condition, MedicationStatement) and the resulting IPS | curl / FHIR JSON |
 
 All examples read `ANPHEROS_BASE_URL` when it is set, so they can also point to a local or test instance; by default they use `https://platform.anpheros.com`.
 
 ## How they were checked
 
-Each example was run on 28 September 2026 against a local instance of the platform with the synthetic sandbox data, using the published SDK packages (`@anpheros/sdk` 0.1.1 from npm, `anpheros_sdk` 0.1.1 from pub.dev). The consent example was run end to end with a simulated sign-in on the consent page; `ai-context-llm` was run with a local model served by Ollama.
+Each example was run on 28 September 2026 against a local instance of the platform with the synthetic sandbox data, using the published SDK packages (`@anpheros/sdk` 0.1.1 from npm, `anpheros_sdk` 0.1.1 from pub.dev). The consent example was run end to end with a simulated sign-in on the consent page; `ai-context-llm` was run with a local model served by Ollama. `backend-ts` and `lab-integration-ts` were added and run on 13 October 2026 the same way, with `@anpheros/sdk` 0.1.2.
 
 ## Documentation
 
