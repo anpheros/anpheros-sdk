@@ -82,9 +82,10 @@ function toResponse(e) {
     0: [502, 'Anpheros could not be reached'],
     401: [502, 'The server\'s Anpheros key is invalid or revoked'],          // a server problem, not the user's
     403: [403, 'No access to this patient (consent missing, expired or revoked, or a read-only key)'],
+    400: [400, e.message],                                                      // invalid input: the message names the field
     404: [404, 'Patient or record not found in this project'],
     409: [409, 'The record changed meanwhile; reload and retry'],
-    422: [422, e.message],                                                      // validation: the message names the problem
+    422: [422, e.message],                                                      // e.g. a referenced patient that does not exist
     429: [503, 'Too many requests; try again shortly'],
   };
   const [status, message] = map[e.status] ?? [502, 'Anpheros returned an error'];

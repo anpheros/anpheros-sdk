@@ -13,13 +13,13 @@ ANPHEROS_KEY=sk_test_… npm start      # HL7 v2
 ANPHEROS_KEY=sk_test_… npm run csv    # CSV
 ```
 
-Output (HL7, run against a local instance with sandbox data, 13 October 2026):
+Output (HL7, run against a local instance with sandbox data, 14 October 2026):
 
 ```
 Imported HL7: created 6, skipped 0
   Cholesterol [Mass/volume] in Serum or Plasma = 212 mg/dL  →  http://loinc.org|2093-3
   …
-  Example in-house marker = 3.2 U/L  →  urn:hl7:l|EX-991
+  Example in-house marker = 3.2 U/L  →  urn:anpheros:lab-code|EX-991
   Not mapped to LOINC (kept with the lab's own code): Example in-house marker
 …
 Sent again: created 0, skipped 6
@@ -37,7 +37,7 @@ Sent again: created 0, skipped 6
 - **Mapping.** A LOINC code in the report always wins (`OBX-3` with `^LN`, or a `LOINC` column in CSV). Otherwise the platform matches the marker name; names it cannot match keep the lab's code and are listed in `unmapped`, so you can add the code on your side. Send LOINC codes when your lab system has them.
 - **Re-sending is safe.** Each row gets a stable identifier from the report, code, date and value.
 - **Provenance.** Every Observation records `author_type = import` and your source system (`X-Anpheros-Source-System`, here `example-lab`).
-- **Errors.** The script prints the status, error type, field and request id, with a hint for 401, 403, 413, 422 and 429.
+- **Errors.** The script prints the status, error type, field and request id, with a hint for 400, 401, 403, 413 and 429.
 - **Security.** Keep the key on the server that receives lab reports; never in a browser or mobile app. The report here is synthetic: never use real patient data in the sandbox.
 - **Patient matching** is yours: a real integration finds the patient by an identifier it shares with your app; this example creates a new one.
 

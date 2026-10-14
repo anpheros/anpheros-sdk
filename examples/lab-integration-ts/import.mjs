@@ -51,10 +51,10 @@ try {
   if (!(e instanceof AnpherosError)) throw e;
   // Every API error has a status, a type, often the field at fault, and a request id to quote to support.
   const hint = {
+    400: 'The report could not be read. Check the format in https://developers.anpheros.com/guides/lab-connector',
     401: 'The key is wrong or revoked. Create a new one in the dashboard.',
     403: 'This key may not write to this patient (read-only key, or no consent covering it).',
-    413: 'The report is too large: up to 500 rows per request.',
-    422: 'The report could not be read. Check the format in https://developers.anpheros.com/guides/lab-connector',
+    413: 'The request body is over the 2 MiB limit; split the report.',
     429: 'Rate limit or the sandbox daily write limit was reached. Try again later.',
   }[e.status] ?? '';
   console.error(`Anpheros error ${e.status} ${e.type}${e.field ? ` (field ${e.field})` : ''}: ${e.message}${e.requestId ? ` [request ${e.requestId}]` : ''}`);

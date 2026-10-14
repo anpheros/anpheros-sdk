@@ -32,8 +32,9 @@ curl -X POST -d '{"kg":72.5}' localhost:3000/api/patients/<id>/weight
 | network error | 502 | Anpheros unreachable |
 | 401 | 502 | the server's key is invalid or revoked: a server problem, not the user's |
 | 403 | 403 | no access: consent missing, expired or revoked, or a read-only key |
+| 400 | 400 | invalid input; the message names the problem and `field` the field |
 | 404 | 404 | not in this project |
-| 422 | 422 | validation; the message names the problem and `field` the field |
+| 422 | 422 | a reference that does not exist for you (for example another project's patient) |
 | 429 | 503 | rate limit; the SDK already retried with backoff |
 
 Each error answer carries the Anpheros `request_id`, which is what to quote to support. The upstream body and the key never reach the browser.
