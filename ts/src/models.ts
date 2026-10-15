@@ -125,6 +125,7 @@ export interface PatternFinding {
   input_fingerprint: string;
   config_fingerprint: string;
   safety: { not_a_diagnosis: true; causal_claim: false; intended_use: string; interpretation_guidance: string };
+  review: { thresholds_reviewed_by_clinician: boolean; thresholds_origin: string };
   [extra: string]: unknown;
 }
 
