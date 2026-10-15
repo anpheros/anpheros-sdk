@@ -564,3 +564,54 @@ const List<String> webhookEventTypes = [
   'document.finalized',
   'ping',
 ];
+
+/// One health-pattern finding (beta, sandbox credentials only): what the record shows over a period, with its evidence,
+/// method and limitations. Derived by fixed statistical rules: not a diagnosis, and an association is not a cause.
+class PatternFinding {
+  PatternFinding({required this.id, required this.type, this.subtype, required this.strength, required this.statisticallySupported,
+      required this.summaryCode, required this.summaryText, required this.windowStart, required this.windowEnd,
+      required this.limitations, required this.evidenceTotal, required this.raw});
+  final String id, type, strength, summaryCode, summaryText, windowStart, windowEnd;
+  final String? subtype;
+
+  /// Only `true` means statistical support; weak and not_tested findings are descriptions.
+  final bool statisticallySupported;
+
+  /// Limitation codes, e.g. `not_causal`, `no_clinical_review`, `weak_evidence`.
+  final List<String> limitations;
+  final int evidenceTotal;
+
+  /// The whole finding as sent by the server (result, statistics, evidence, method, safety…).
+  final Map<String, dynamic> raw;
+
+  factory PatternFinding.fromJson(Map<String, dynamic> j) => PatternFinding(
+      id: j['id'] as String, type: j['type'] as String, subtype: _s(j['subtype']), strength: j['strength'] as String,
+      statisticallySupported: j['statistically_supported'] as bool? ?? false, summaryCode: j['summary_code'] as String,
+      summaryText: j['summary_text'] as String, windowStart: (j['window'] as Map)['start'] as String,
+      windowEnd: (j['window'] as Map)['end'] as String,
+      limitations: ((j['limitations'] as List?) ?? []).map((e) => (e as Map)['code'] as String).toList(),
+      evidenceTotal: (j['evidence_total'] as num?)?.toInt() ?? 0, raw: j);
+}
+
+/// A run of the pattern engine for one patient and window.
+class PatternRun {
+  PatternRun({required this.patient, required this.engineVersion, required this.testsInRun, this.familyFingerprint, required this.findings,
+      required this.notComputed, required this.omitted, required this.interpretationGuidance});
+  final String patient, engineVersion, interpretationGuidance;
+  final int testsInRun;
+  final String? familyFingerprint;
+  final List<PatternFinding> findings;
+
+  /// What could not be computed and why (too little data, no variation…): not findings.
+  final List<Map<String, dynamic>> notComputed;
+
+  /// What the consent behind the credential left out.
+  final List<String> omitted;
+
+  factory PatternRun.fromJson(Map<String, dynamic> j) => PatternRun(
+      patient: j['patient'] as String, engineVersion: j['engine_version'] as String, testsInRun: (j['tests_in_run'] as num).toInt(),
+      familyFingerprint: _s(j['family_fingerprint']),
+      findings: (j['findings'] as List).map((e) => PatternFinding.fromJson(e as Map<String, dynamic>)).toList(),
+      notComputed: (j['not_computed'] as List).map((e) => e as Map<String, dynamic>).toList(),
+      omitted: (j['omitted'] as List).map((e) => e as String).toList(), interpretationGuidance: j['interpretation_guidance'] as String);
+}

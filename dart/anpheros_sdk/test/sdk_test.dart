@@ -25,6 +25,38 @@ class Fake {
 
 void main() {
   group('client', () {
+    test('patterns: run, evidence, series and compare (beta, sandbox)', () async {
+      final id = 'pf_${'a' * 24}';
+      final window = {'start': '2026-04-19', 'end': '2026-10-15'};
+      final fake = Fake()
+        ..script.add((_) => Fake.json({
+              'patient': 'Patient/p1', 'window': window, 'engine_version': '0.2.0', 'time_basis': {}, 'tests_in_run': 1,
+              'family_fingerprint': null, 'not_computed': [], 'omitted': [], 'interpretation_guidance': 'Not diagnoses.',
+              'findings': [
+                {'id': id, 'type': 'trend', 'subtype': 'numeric', 'strength': 'moderate', 'statistically_supported': true,
+                 'summary_code': 'trend.decreasing', 'summary_text': 'Systolic blood pressure fell.', 'window': window,
+                 'limitations': [{'code': 'not_causal', 'text': '...'}], 'evidence_total': 40}
+              ]
+            }))
+        ..script.add((_) => Fake.json({'data': [{'resource': 'Observation/o1', 'version': 1}], 'total': 1, 'next_cursor': null}))
+        ..script.add((_) => Fake.json({'patient': 'Patient/p1', 'series': [], 'omitted': []}))
+        ..script.add((_) => Fake.json({'finding': null, 'not_computed': null, 'omitted': [], 'interpretation_guidance': 'g'}));
+      final a = Anpheros(auth: AnpherosAuth.apiKey('sk_test_x'), baseUrl: 'https://api.test', httpClient: fake.client);
+      final run = await a.patterns.run('p1', windowDays: 90, minStrength: 'moderate');
+      expect(fake.requests[0].url.toString(), 'https://api.test/v1/patients/p1/patterns?window_days=90&min_strength=moderate');
+      expect(run.findings.single.statisticallySupported, isTrue);
+      expect(run.findings.single.limitations, ['not_causal']);
+      final ev = await a.patterns.evidence('p1', id, limit: 10);
+      expect(fake.requests[1].url.path, '/v1/patients/p1/patterns/$id/evidence');
+      expect(ev.data.single['resource'], 'Observation/o1');
+      await a.patterns.series('p1', '8480-6', to: DateTime.utc(2026, 10, 15));
+      expect(fake.requests[2].url.toString(), 'https://api.test/v1/patients/p1/series?code=8480-6&to=2026-10-15');
+      await a.patterns.compare('p1', '8480-6', firstStart: DateTime.utc(2026, 4, 1), firstEnd: DateTime.utc(2026, 5, 1),
+          secondStart: DateTime.utc(2026, 9, 1), secondEnd: DateTime.utc(2026, 10, 1));
+      expect(fake.requests[3].method, 'POST');
+      expect((jsonDecode(fake.requests[3].body) as Map)['second'], {'start': '2026-09-01', 'end': '2026-10-01'});
+    });
+
     test('sends the key, parses pages and models', () async {
       final fake = Fake()
         ..script.add((_) => Fake.json({

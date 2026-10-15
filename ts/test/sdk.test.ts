@@ -128,3 +128,30 @@ test('webhooks: create, ping, deliveries and signature verification', async () =
   assert.equal(await verifyWebhookSignature({ secret: 'whsec_no', header: `t=${ts},v1=${sig}`, body, now: ts + 10 }), false);
   assert.equal(await verifyWebhookSignature({ secret: 'whsec_abc', header: `t=${ts},v1=${sig}`, body, now: ts + 1000 }), false);
 });
+
+test('patterns: run, evidence, series and compare (beta, sandbox credentials only)', async () => {
+  const id = 'pf_' + 'a'.repeat(24);
+  const window = { start: '2026-04-19', end: '2026-10-15' };
+  const { f, calls } = fake(
+    () => json({ patient: 'Patient/p1', window, engine_version: '0.2.0', time_basis: {}, tests_in_run: 1, family_fingerprint: null,
+                 findings: [{ id, strength: 'moderate', statistically_supported: true, summary_text: 'Systolic blood pressure fell.' }],
+                 not_computed: [], omitted: [], interpretation_guidance: 'Not diagnoses.' }),
+    () => json({ data: [{ resource: 'Observation/o1', version: 1, date: '2026-10-01', value: 130, author_type: 'patient' }], total: 1, next_cursor: null }),
+    () => json({ patient: 'Patient/p1', window, time_basis: {}, series: [], omitted: [] }),
+    () => json({ finding: null, not_computed: null, omitted: [], interpretation_guidance: 'Not diagnoses.' }),
+  );
+  const a = new Anpheros({ auth: apiKey('sk_test_x'), baseUrl: 'https://api.test', fetch: f });
+  const run = await a.patterns.run('p1', { window_days: 90, min_strength: 'moderate' });
+  assert.equal(calls[0].url, 'https://api.test/v1/patients/p1/patterns?window_days=90&min_strength=moderate');
+  assert.equal(run.findings[0].statistically_supported, true);
+  const ev = await a.patterns.evidence('p1', id, { limit: 10 });
+  assert.equal(calls[1].url, `https://api.test/v1/patients/p1/patterns/${id}/evidence?limit=10`);
+  assert.equal(ev.data[0].resource, 'Observation/o1');
+  await a.patterns.series('p1', { code: '8480-6' });
+  assert.equal(calls[2].url, 'https://api.test/v1/patients/p1/series?code=8480-6');
+  const cmp = await a.patterns.compare('p1', { code: '8480-6', first: { start: '2026-04-01', end: '2026-05-01' }, second: { start: '2026-09-01', end: '2026-10-01' } });
+  assert.equal(calls[3].method, 'POST');
+  assert.equal(calls[3].url, 'https://api.test/v1/patients/p1/patterns/compare');
+  assert.equal(JSON.parse(await calls[3].text()).first.start, '2026-04-01');
+  assert.equal(cmp.finding, null);
+});

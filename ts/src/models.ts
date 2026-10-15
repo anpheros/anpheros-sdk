@@ -93,3 +93,71 @@ export const WEBHOOK_EVENT_TYPES = [
   'ping',
 ] as const;
 export type WebhookEventType = typeof WEBHOOK_EVENT_TYPES[number];
+
+/** Health patterns (beta, sandbox credentials only): derived by fixed statistical rules; not diagnoses, and an association is not a cause. */
+export type PatternStrength = 'strong' | 'moderate' | 'weak' | 'not_tested';
+export type PatternType = 'trend' | 'baseline_deviation' | 'recurrence' | 'association' | 'convergence';
+
+export interface PatternEvidence { resource: string; version: number; date: string | null; value: number | null; author_type: string | null }
+
+export interface PatternFinding {
+  id: string;
+  patient: string;
+  type: PatternType;
+  subtype: string | null;
+  epistemic_status: 'descriptive_observation' | 'statistical_association' | 'validated_prediction';
+  strength: PatternStrength;
+  /** Only `true` means statistical support; weak and not_tested findings are descriptions. */
+  statistically_supported: boolean;
+  summary_code: string;
+  summary_text: string;
+  variables: Record<string, unknown>[];
+  window: { start: string; end: string };
+  comparison_window: { start: string; end: string } | null;
+  result: Record<string, unknown>;
+  statistics: Record<string, unknown> | null;
+  threshold: Record<string, unknown> | null;
+  evidence: PatternEvidence[];
+  evidence_total: number;
+  limitations: { code: string; text: string }[];
+  method: { name: string; version: string; parameters: Record<string, unknown> };
+  engine_version: string;
+  input_fingerprint: string;
+  config_fingerprint: string;
+  safety: { not_a_diagnosis: true; causal_claim: false; intended_use: string; interpretation_guidance: string };
+  [extra: string]: unknown;
+}
+
+export interface PatternNotComputed { type: string; variables: Record<string, unknown>[]; window: { start: string; end: string }; reason: string; detail: string }
+
+export interface PatternRun {
+  patient: string;
+  window: { start: string; end: string };
+  engine_version: string;
+  time_basis: Record<string, unknown>;
+  tests_in_run: number;
+  family_fingerprint: string | null;
+  findings: PatternFinding[];
+  not_computed: PatternNotComputed[];
+  omitted: string[];
+  interpretation_guidance: string;
+}
+
+export interface SeriesResult {
+  patient: string;
+  window: { start: string; end: string };
+  time_basis: Record<string, unknown>;
+  series: { code: string; unit: string | null; component_of: string | null; display: string | null; flags: string[];
+            quality: Record<string, unknown>; days: { date: string; value: number; n: number; resources: string[] }[] }[];
+  omitted: string[];
+}
+
+export interface CompareInput {
+  code: string;
+  unit?: string;
+  component_of?: string;
+  first: { start: string; end: string };
+  second: { start: string; end: string };
+}
+
+export interface CompareResult { finding: PatternFinding | null; not_computed: PatternNotComputed | null; omitted: string[]; interpretation_guidance: string }

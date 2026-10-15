@@ -4,6 +4,7 @@ import type {
   AuthorType, Bundle, Concept, Condition, ConditionInput, ContextRequest, ContextResult, Document, DocumentInput, FhirResource,
   GrantInfo, Medication, MedicationInput, Observation, ObservationInput, Page, Patient, PatientInput, ProvenanceEntry, TimelineItem,
   MyPatient, AccessEntry, WebhookEndpoint, WebhookDelivery, LabImportResult,
+  CompareInput, CompareResult, PatternEvidence, PatternFinding, PatternRun, PatternStrength, SeriesResult,
 } from './models.js';
 
 export interface AnpherosOptions {
@@ -157,6 +158,22 @@ export class Anpheros {
 
   readonly context = {
     build: (req: ContextRequest) => this.post<ContextResult>('/v1/context', req),
+  };
+
+  /** Health patterns (beta, sandbox credentials only): trends, deviations from the person's usual level and symptom
+   *  recurrence, each with its period, evidence and limitations. Not diagnoses; an association is not a cause. */
+  readonly patterns = {
+    run: (patientId: string, q: { end?: string; window_days?: number; types?: string; min_strength?: PatternStrength } = {}) =>
+      this.get<PatternRun>(`/v1/patients/${enc(patientId)}/patterns`, q),
+    /** Recomputed for the same window; a 404 means the record changed since the id was issued. */
+    get: (patientId: string, findingId: string, q: { end?: string; window_days?: number } = {}) =>
+      this.get<PatternFinding>(`/v1/patients/${enc(patientId)}/patterns/${enc(findingId)}`, q),
+    evidence: (patientId: string, findingId: string, q: { end?: string; window_days?: number; limit?: number; cursor?: string } = {}) =>
+      this.get<Page<PatternEvidence>>(`/v1/patients/${enc(patientId)}/patterns/${enc(findingId)}/evidence`, q),
+    series: (patientId: string, q: { code: string; unit?: string; component_of?: string; from?: string; to?: string }) =>
+      this.get<SeriesResult>(`/v1/patients/${enc(patientId)}/series`, q),
+    compare: (patientId: string, input: CompareInput) =>
+      this.post<CompareResult>(`/v1/patients/${enc(patientId)}/patterns/compare`, input),
   };
 
   readonly grants = {

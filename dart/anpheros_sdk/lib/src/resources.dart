@@ -154,6 +154,67 @@ class TimelineResource {
   }
 }
 
+/// Health patterns (beta, sandbox credentials only): trends, deviations from the person's usual level and symptom
+/// recurrence, each with its period, evidence and limitations. Not diagnoses; an association is not a cause.
+class PatternsResource {
+  PatternsResource(this._c);
+  final Anpheros _c;
+
+  Map<String, String> _window(DateTime? end, int? windowDays) => {
+        if (end != null) 'end': _day(end),
+        if (windowDays != null) 'window_days': '$windowDays',
+      };
+
+  Future<PatternRun> run(String patientId, {DateTime? end, int? windowDays, List<String>? types, String? minStrength}) async {
+    final r = await _c.request('GET', '/v1/patients/${_enc(patientId)}/patterns', query: {
+      ..._window(end, windowDays),
+      if (types != null) 'types': types.join(','),
+      if (minStrength != null) 'min_strength': minStrength,
+    });
+    return PatternRun.fromJson(r.json);
+  }
+
+  /// Recomputed for the same window; a 404 means the record changed since the id was issued.
+  Future<PatternFinding> get(String patientId, String findingId, {DateTime? end, int? windowDays}) async =>
+      PatternFinding.fromJson((await _c.request('GET', '/v1/patients/${_enc(patientId)}/patterns/${_enc(findingId)}',
+              query: _window(end, windowDays)))
+          .json);
+
+  Future<Page<Map<String, dynamic>>> evidence(String patientId, String findingId,
+      {DateTime? end, int? windowDays, int limit = 50, String? cursor}) async {
+    final r = await _c.request('GET', '/v1/patients/${_enc(patientId)}/patterns/${_enc(findingId)}/evidence', query: {
+      ..._window(end, windowDays),
+      'limit': '$limit',
+      if (cursor != null) 'cursor': cursor,
+    });
+    return Page.fromJson(r.json, (e) => e);
+  }
+
+  /// One measurement as one value per day (the day's median, UTC days) with data quality.
+  Future<Map<String, dynamic>> series(String patientId, String code, {String? unit, String? componentOf, DateTime? from, DateTime? to}) async =>
+      (await _c.request('GET', '/v1/patients/${_enc(patientId)}/series', query: {
+        'code': code,
+        if (unit != null) 'unit': unit,
+        if (componentOf != null) 'component_of': componentOf,
+        if (from != null) 'from': _day(from),
+        if (to != null) 'to': _day(to),
+      }))
+          .json;
+
+  /// Daily medians of the second period against the first; the periods must not overlap.
+  Future<Map<String, dynamic>> compare(String patientId, String code,
+      {required DateTime firstStart, required DateTime firstEnd, required DateTime secondStart, required DateTime secondEnd,
+      String? unit, String? componentOf}) async =>
+      (await _c.request('POST', '/v1/patients/${_enc(patientId)}/patterns/compare', json: {
+        'code': code,
+        if (unit != null) 'unit': unit,
+        if (componentOf != null) 'component_of': componentOf,
+        'first': {'start': _day(firstStart), 'end': _day(firstEnd)},
+        'second': {'start': _day(secondStart), 'end': _day(secondEnd)},
+      }))
+          .json;
+}
+
 class ProvenanceResource {
   ProvenanceResource(this._c);
   final Anpheros _c;

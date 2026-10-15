@@ -27,6 +27,7 @@ class Anpheros {
     medications = ClinicalResource<dynamic>(this, 'medications');
     documents = DocumentsResource(this);
     timeline = TimelineResource(this);
+    patterns = PatternsResource(this);
     provenance = ProvenanceResource(this);
     context = ContextResource(this);
     grants = GrantsResource(this);
@@ -50,6 +51,9 @@ class Anpheros {
   late final ClinicalResource medications;
   late final DocumentsResource documents;
   late final TimelineResource timeline;
+
+  /// Health patterns (beta, sandbox credentials only).
+  late final PatternsResource patterns;
   late final ProvenanceResource provenance;
   late final ContextResource context;
   late final GrantsResource grants;
