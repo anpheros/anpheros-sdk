@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0 — 2026-10-16
+
+- `patterns` (beta, sandbox credentials only): `run`, `get`, `evidence`, `series` and `compare` for the Health Pattern
+  Engine, with `PatternRun` and `PatternFinding`. Each finding has its period, supporting resources, method version,
+  limitations, `review` (clinician review of the thresholds; `false` for now) and `safety`.
+
 ## 0.1.2 — 2026-09-28
 
 - Documentation: dartdoc comments on the models; the package metadata points to the developer guides

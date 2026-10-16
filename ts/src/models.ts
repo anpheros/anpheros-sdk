@@ -94,7 +94,7 @@ export const WEBHOOK_EVENT_TYPES = [
 ] as const;
 export type WebhookEventType = typeof WEBHOOK_EVENT_TYPES[number];
 
-/** Health patterns (beta, sandbox credentials only): derived by fixed statistical rules; not diagnoses, and an association is not a cause. */
+/** Health patterns (beta; on production records only under a patient's `anpheros/patterns` consent): derived by fixed statistical rules; not diagnoses, and an association is not a cause. */
 export type PatternStrength = 'strong' | 'moderate' | 'weak' | 'not_tested';
 export type PatternType = 'trend' | 'baseline_deviation' | 'recurrence' | 'association' | 'convergence';
 

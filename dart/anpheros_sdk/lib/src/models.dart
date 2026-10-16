@@ -565,7 +565,7 @@ const List<String> webhookEventTypes = [
   'ping',
 ];
 
-/// One health-pattern finding (beta, sandbox credentials only): what the record shows over a period, with its evidence,
+/// One health-pattern finding (beta; on production records only under a patient's `anpheros/patterns` consent): what the record shows over a period, with its evidence,
 /// method and limitations. Derived by fixed statistical rules: not a diagnosis, and an association is not a cause.
 class PatternFinding {
   PatternFinding({required this.id, required this.type, this.subtype, required this.strength, required this.statisticallySupported,

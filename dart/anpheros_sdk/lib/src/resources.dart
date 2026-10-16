@@ -154,7 +154,7 @@ class TimelineResource {
   }
 }
 
-/// Health patterns (beta, sandbox credentials only): trends, deviations from the person's usual level and symptom
+/// Health patterns (beta; on production records only under a patient's `anpheros/patterns` consent): trends, deviations from the person's usual level and symptom
 /// recurrence, each with its period, evidence and limitations. Not diagnoses; an association is not a cause.
 class PatternsResource {
   PatternsResource(this._c);

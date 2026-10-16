@@ -52,7 +52,7 @@ class Anpheros {
   late final DocumentsResource documents;
   late final TimelineResource timeline;
 
-  /// Health patterns (beta, sandbox credentials only).
+  /// Health patterns (beta; on production records only under a patient's `anpheros/patterns` consent).
   late final PatternsResource patterns;
   late final ProvenanceResource provenance;
   late final ContextResource context;

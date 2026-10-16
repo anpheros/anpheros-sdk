@@ -1,6 +1,6 @@
 {
   "name": "@anpheros/sdk",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "TypeScript client for Anpheros Platform, interoperable medical-data infrastructure: HL7 FHIR R4 records, patient consent (OAuth 2.1 / SMART on FHIR), provenance and an AI context API.",
   "license": "Apache-2.0",
   "homepage": "https://developers.anpheros.com/guides/sdks",

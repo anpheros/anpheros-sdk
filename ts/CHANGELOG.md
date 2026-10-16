@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0 — 2026-10-16
+
+- `patterns` (beta, sandbox credentials only): `run`, `get`, `evidence`, `series` and `compare` for the Health Pattern
+  Engine: trends, deviations from the person's usual level and symptom recurrence, each with its period, supporting
+  resources, method version and limitations. Findings carry `review` (whether a clinician reviewed the thresholds;
+  `false` for now) and `safety` (not a diagnosis, no causal claim).
+
 ## 0.1.2 — 2026-09-28
 
 - `TimelineItem.type` includes `episode` (episodes of care, already returned by the server).
