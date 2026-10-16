@@ -72,6 +72,9 @@ Raw test results, published so they can be checked (test results, not certificat
 ## Documentation
 
 - Developer guides: https://developers.anpheros.com/guides/
+- Healthcare API: https://developers.anpheros.com/guides/healthcare-api
+- Healthcare API platform: https://developers.anpheros.com/guides/healthcare-api-platform
+- FHIR platform: https://developers.anpheros.com/guides/fhir
 - SDK guide: https://developers.anpheros.com/guides/sdks
 - API reference (OpenAPI): https://developers.anpheros.com/docs
 - For AI assistants: https://developers.anpheros.com/llms.txt
