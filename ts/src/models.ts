@@ -90,6 +90,7 @@ export const WEBHOOK_EVENT_TYPES = [
   'resource.created', 'resource.updated', 'resource.deleted',
   'consent.granted', 'consent.revoked',
   'document.finalized',
+  'proposal.created',
   'ping',
 ] as const;
 export type WebhookEventType = typeof WEBHOOK_EVENT_TYPES[number];
