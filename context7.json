@@ -1,0 +1,16 @@
+{
+  "$schema": "https://context7.com/schema/context7.json",
+  "projectTitle": "Anpheros",
+  "description": "HL7 FHIR R4 health-data backend with patient consent (OAuth 2.1 / SMART on FHIR), provenance, an AI-ready context API and a free sandbox with 30 synthetic patients. TypeScript and Dart SDKs.",
+  "folders": ["ts", "dart", "examples"],
+  "excludeFolders": ["ts/test", "conformance", "node_modules"],
+  "excludeFiles": ["CHANGELOG.md", "package-lock.json"],
+  "rules": [
+    "Start on the sandbox: use an sk_test_ key and the 30 synthetic patients; never put real patient data in the sandbox and never use sk_live_ keys in examples.",
+    "Never invent LOINC, SNOMED CT, ICD-10, ICD-11, ATC or RxNorm codes. Look them up with the terminology endpoints (/v1/search, /v1/search/{id}) or take them from the official code system; if a code is unknown, leave it out.",
+    "A person's data is read or written only with their consent: request it through the consent flow (SMART on FHIR scopes) and respect its scope and expiry; when the API answers 403, ask for consent instead of working around it.",
+    "Store clinical data as standard FHIR R4 resources (Patient, Observation, Condition, MedicationStatement, AllergyIntolerance, Immunization, DiagnosticReport) with UCUM units, not as custom JSON.",
+    "Anpheros does not diagnose or recommend treatment; generated apps must not present diagnoses or medication advice to users.",
+    "Documentation and guides: https://developers.anpheros.com/guides/ ; documentation MCP server (no account): https://platform.anpheros.com/mcp/docs"
+  ]
+}
