@@ -4,8 +4,7 @@ import type {
   AuthorType, Bundle, Concept, Condition, ConditionInput, ContextRequest, ContextResult, Document, DocumentInput, FhirResource,
   GrantInfo, Medication, MedicationInput, Observation, ObservationInput, Page, Patient, PatientInput, ProvenanceEntry, TimelineItem,
   MyPatient, AccessEntry, WebhookEndpoint, WebhookDelivery, LabImportResult,
-  CompareInput, CompareResult, PatternEvidence, PatternFinding, PatternRun, PatternStrength, SeriesResult,
-} from './models.js';
+  CompareInput, CompareResult, PatternEvidence, PatternFinding, PatternRun, PatternStrength, SeriesResult, NeuroSummary } from './models.js';
 
 export interface AnpherosOptions {
   auth: Auth;
@@ -146,6 +145,13 @@ export class Anpheros {
   readonly timeline = {
     list: (patientId: string, q: { from?: string; to?: string; types?: string; limit?: number; cursor?: string } = {}) =>
       this.get<Page<TimelineItem>>(`/v1/patients/${enc(patientId)}/timeline`, q),
+  };
+
+  /** Neurology view (beta): head imaging, episodes, head symptoms, active medications and plain
+   *  before/after numbers around the latest head MRI/CT — every item with provenance, no interpretation.
+   *  Built under the caller's grant: what the patient did not share is absent, not counted. */
+  readonly neuro = {
+    summary: (patientId: string) => this.get<NeuroSummary>(`/v1/patients/${enc(patientId)}/neuro-summary`),
   };
 
   readonly provenance = {

@@ -154,6 +154,17 @@ class TimelineResource {
   }
 }
 
+/// Neurology view (beta): head imaging, episodes, head symptoms, active medications and plain before/after numbers
+/// around the latest head MRI/CT — every item with provenance, nothing interpretive. Built under the caller's grant:
+/// what the patient did not share is absent, not counted. Returned as JSON (see docs/neuro-view.md).
+class NeuroResource {
+  NeuroResource(this._c);
+  final Anpheros _c;
+
+  Future<Map<String, dynamic>> summary(String patientId) async =>
+      (await _c.request('GET', '/v1/patients/${_enc(patientId)}/neuro-summary')).json;
+}
+
 /// Health patterns (beta; on production records only under a patient's `anpheros/patterns` consent): trends, deviations from the person's usual level and symptom
 /// recurrence, each with its period, evidence and limitations. Not diagnoses; an association is not a cause.
 class PatternsResource {

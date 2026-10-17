@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- `neuro.summary(patientId)` (beta): the neurology view `GET /v1/patients/{id}/neuro-summary` — head imaging, episodes,
+  head symptoms, active medications and plain before/after numbers around the latest head MRI/CT, each with provenance.
+  Built under the caller's grant; nothing interpretive. See `docs/neuro-view.md`.
+
 ## 0.2.0 — 2026-10-16
 
 - `patterns` (beta, sandbox credentials only): `run`, `get`, `evidence`, `series` and `compare` for the Health Pattern

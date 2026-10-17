@@ -164,3 +164,24 @@ export interface CompareInput {
 }
 
 export interface CompareResult { finding: PatternFinding | null; not_computed: PatternNotComputed | null; omitted: string[]; interpretation_guidance: string }
+
+/** Neurology view (beta): `GET /v1/patients/{id}/neuro-summary`. Every item carries `reference` + `provenance`; nothing interpretive. */
+export interface NeuroProvenance { author_type: string | null; source_system: string | null; organization: string | null; last_updated: string | null; version: number | null }
+export interface NeuroImagingItem { reference: string; date: string | null; title: string | null; kind: 'DocumentReference' | 'DiagnosticReport'; conclusion: string | null; provenance: NeuroProvenance }
+export interface NeuroEpisodeItem { reference: string; date: string | null; kind: string | null; intensity: number | null; period: { start?: string | null; end?: string | null }; triggers: string[]; provenance: NeuroProvenance }
+export interface NeuroSymptomItem { reference: string; date: string | null; code: string | null; intensity: number | null; provenance: NeuroProvenance }
+export interface NeuroChangeFinding { key: 'symptom_days' | 'notes' | 'episodes'; before: number; after: number; delta: number }
+export interface NeuroChanges { anchor: string; previous: string | null; days: number; before: { start: string; end: string }; after: { start: string; end: string }; findings: NeuroChangeFinding[]; limitations: string[] }
+export interface NeuroSummary {
+  patient: string | null;
+  generated_at: string;
+  imaging: NeuroImagingItem[];
+  episodes: NeuroEpisodeItem[];
+  /** `null` when the grant does not include symptom observations. */
+  head_symptoms: { window_days: number; notes: number; days_with: number; items: NeuroSymptomItem[] } | null;
+  medications: { reference: string; date: string | null; display: string | null; status: string | null; provenance: NeuroProvenance }[];
+  /** `null` without a dated head MRI/CT. */
+  changes: NeuroChanges | null;
+  limitations: string[];
+  disclaimer: string;
+}

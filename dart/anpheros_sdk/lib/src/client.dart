@@ -28,6 +28,7 @@ class Anpheros {
     documents = DocumentsResource(this);
     timeline = TimelineResource(this);
     patterns = PatternsResource(this);
+    neuro = NeuroResource(this);
     provenance = ProvenanceResource(this);
     context = ContextResource(this);
     grants = GrantsResource(this);
@@ -54,6 +55,9 @@ class Anpheros {
 
   /// Health patterns (beta; on production records only under a patient's `anpheros/patterns` consent).
   late final PatternsResource patterns;
+
+  /// Neurology view (beta): `GET /v1/patients/{id}/neuro-summary`.
+  late final NeuroResource neuro;
   late final ProvenanceResource provenance;
   late final ContextResource context;
   late final GrantsResource grants;
