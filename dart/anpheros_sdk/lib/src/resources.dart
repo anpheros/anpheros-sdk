@@ -291,6 +291,16 @@ class TerminologyResource {
 
   Future<Concept> lookup(String system, String code) async =>
       Concept.fromJson((await _c.request('GET', '/v1/terminology/${_enc(system)}/${_enc(code)}')).json);
+
+  /// Anpheros Search: symptoms, conditions and treatments in 20 languages, each with its sources (`/v1/search`).
+  Future<Map<String, dynamic>> searchHealthTerms(String q, {String? type, String lang = 'en', int limit = 20, int offset = 0}) async =>
+      (await _c.request('GET', '/v1/search',
+              query: {'q': q, if (type != null) 'type': type, 'lang': lang, 'limit': '$limit', 'offset': '$offset'}))
+          .json;
+
+  /// One catalog entry (`SYM-…`, `CON-…`, `TRT-…`) with codes, names, description, sourced links and quoted indications.
+  Future<Map<String, dynamic>> healthTerm(String id, {String lang = 'en'}) async =>
+      (await _c.request('GET', '/v1/search/${_enc(id)}', query: {'lang': lang})).json;
 }
 
 /// Raw FHIR R4 access at `/fhir/R4` for anything the simplified API does not cover.

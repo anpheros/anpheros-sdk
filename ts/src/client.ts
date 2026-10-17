@@ -236,6 +236,11 @@ export class Anpheros {
   readonly terminology = {
     search: async (system: 'loinc' | 'atc', q: string, limit = 20) => (await this.get<{ data: Concept[] }>(`/v1/terminology/${system}`, { q, limit })).data,
     lookup: (system: 'loinc' | 'atc', code: string) => this.get<Concept>(`/v1/terminology/${system}/${enc(code)}`),
+    /** Anpheros Search: symptoms, conditions and treatments in 20 languages, each with its sources. */
+    searchHealthTerms: (q: string, o: { type?: 'symptom' | 'condition' | 'treatment'; lang?: string; limit?: number; offset?: number } = {}) =>
+      this.get<Record<string, unknown>>(`/v1/search`, { q, type: o.type, lang: o.lang ?? 'en', limit: o.limit ?? 20, offset: o.offset ?? 0 }),
+    /** One catalog entry (SYM-…, CON-…, TRT-…) with codes, names, description, sourced links and quoted indications. */
+    healthTerm: (id: string, lang = 'en') => this.get<Record<string, unknown>>(`/v1/search/${enc(id)}`, { lang }),
   };
 
   /** Raw FHIR R4 access at `/fhir/R4`. */
