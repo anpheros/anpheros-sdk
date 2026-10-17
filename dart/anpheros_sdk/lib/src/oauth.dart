@@ -91,6 +91,38 @@ class OAuthFlow {
         if (patient != null) 'patient': patient,
       });
 
+  /// Ask a person for access by their email (CIBA, poll mode; confidential clients only). The person
+  /// approves in the Anpheros app or from the email they receive; then [pollAccess] returns the tokens.
+  /// The answer is the same whether or not the email has an Anpheros account.
+  Future<AccessRequestTicket> requestAccess({
+    required String email,
+    required List<String> scopes,
+    String? message,
+    String purpose = 'treatment',
+    Duration? expiresIn,
+  }) async {
+    final res = await _http.post(Uri.parse('$baseUrl/oauth/bc-authorize'), body: {
+      'login_hint': email,
+      'scope': scopes.join(' '),
+      'purpose': purpose,
+      if (message != null) 'binding_message': message,
+      if (expiresIn != null) 'requested_expiry': '${expiresIn.inSeconds}',
+      'client_id': clientId,
+      if (clientSecret != null) 'client_secret': clientSecret!,
+    });
+    final body = res.body.isEmpty ? null : jsonDecode(res.body);
+    if (res.statusCode != 200) {
+      throw AnpherosException.fromResponse(res.statusCode, body, res.headers['anpheros-request-id']);
+    }
+    final m = body as Map<String, dynamic>;
+    return AccessRequestTicket(m['auth_req_id'] as String, m['expires_in'] as int, m['interval'] as int);
+  }
+
+  /// Tokens once the person approved; throws with `authorization_pending` while they have not decided,
+  /// `access_denied` if they refused and `expired_token` if the request ran out. Poll every `interval` seconds.
+  Future<OAuthTokens> pollAccess(String authReqId) =>
+      _token({'grant_type': 'urn:openid:params:grant-type:ciba', 'auth_req_id': authReqId});
+
   Future<void> revoke(String token) async {
     await _http.post(Uri.parse('$baseUrl/oauth/revoke'), body: {
       'token': token,
@@ -111,4 +143,14 @@ class OAuthFlow {
     }
     return OAuthTokens.fromJson(body as Map<String, dynamic>);
   }
+}
+
+
+/// What [OAuthFlow.requestAccess] returns: the id to poll with, and how long and how often.
+class AccessRequestTicket {
+  AccessRequestTicket(this.authReqId, this.expiresIn, this.interval);
+
+  final String authReqId;
+  final int expiresIn;
+  final int interval;
 }

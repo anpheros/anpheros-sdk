@@ -91,6 +91,7 @@ export const WEBHOOK_EVENT_TYPES = [
   'consent.granted', 'consent.revoked',
   'document.finalized',
   'proposal.created',
+  'access_request.created',
   'ping',
 ] as const;
 export type WebhookEventType = typeof WEBHOOK_EVENT_TYPES[number];

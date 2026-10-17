@@ -55,6 +55,25 @@ export class OAuthFlow {
     return this.token({ grant_type: 'urn:anpheros:params:oauth:grant-type:identity', subject_token: firebaseIdToken, scope: scopes.join(' '), ...(patient ? { patient } : {}) });
   }
 
+  /** Ask a person for access by their email (CIBA, poll mode; confidential clients). They approve in the
+   *  Anpheros app or from the email; then `pollAccess` returns the tokens. Same answer for unknown emails. */
+  async requestAccess(p: { email: string; scopes: string[]; message?: string; purpose?: string; expiresInSeconds?: number }):
+    Promise<{ auth_req_id: string; expires_in: number; interval: number }> {
+    const body = new URLSearchParams({ login_hint: p.email, scope: p.scopes.join(' '), purpose: p.purpose ?? 'treatment', client_id: this.o.clientId });
+    if (p.message) body.set('binding_message', p.message);
+    if (p.expiresInSeconds) body.set('requested_expiry', String(p.expiresInSeconds));
+    if (this.o.clientSecret) body.set('client_secret', this.o.clientSecret);
+    const res = await this.f(`${this.o.baseUrl}/oauth/bc-authorize`, { method: 'POST', body });
+    const json = (await res.json().catch(() => null)) as unknown;
+    if (!res.ok) throw AnpherosError.fromResponse(res.status, json, res.headers.get('anpheros-request-id') ?? undefined);
+    return json as { auth_req_id: string; expires_in: number; interval: number };
+  }
+
+  /** Tokens once approved; throws `authorization_pending` until then, `access_denied` or `expired_token` otherwise. */
+  pollAccess(authReqId: string): Promise<OAuthTokens> {
+    return this.token({ grant_type: 'urn:openid:params:grant-type:ciba', auth_req_id: authReqId });
+  }
+
   async revoke(token: string): Promise<void> {
     const body = new URLSearchParams({ token, client_id: this.o.clientId });
     if (this.o.clientSecret) body.set('client_secret', this.o.clientSecret);

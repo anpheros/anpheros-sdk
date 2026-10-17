@@ -563,6 +563,7 @@ const List<String> webhookEventTypes = [
   'consent.granted', 'consent.revoked',
   'document.finalized',
   'proposal.created',
+  'access_request.created',
   'ping',
 ];
 
