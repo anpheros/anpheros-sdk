@@ -1,4 +1,6 @@
-# Anpheros SDKs and examples
+# Anpheros FHIR API SDKs (TypeScript, Dart / Flutter)
+
+> Official client libraries for a FHIR R4 healthcare API with a free FHIR sandbox: patients, observations, lab results, conditions, medications, International Patient Summary, patient consent and AI context, in TypeScript and Dart / Flutter.
 
 **Anpheros is interoperable medical-data infrastructure for building healthcare applications, medical software and AI services.** Each patient has one HL7 FHIR R4 record that they control; applications, clinics, laboratories and AI agents read and write it through the Anpheros Platform API — with patient consent (OAuth 2.1 / SMART on FHIR), provenance on every write and an access log the patient can see. This repository contains the official client libraries and runnable examples.
 
@@ -7,15 +9,26 @@
 | Dart / Flutter | [`anpheros_sdk`](https://pub.dev/packages/anpheros_sdk) | `dart pub add anpheros_sdk` | [`dart/anpheros_sdk`](https://github.com/anpheros/anpheros-sdk/tree/main/dart/anpheros_sdk) |
 | TypeScript (Node 18+, browsers, Deno, Bun) | [`@anpheros/sdk`](https://www.npmjs.com/package/@anpheros/sdk) | `npm install @anpheros/sdk` | [`ts`](https://github.com/anpheros/anpheros-sdk/tree/main/ts) |
 
+## Quick start in 2 minutes
+
+1. **Get a free sandbox key:** sign in on the [dashboard](https://platform.anpheros.com/dashboard/?utm_source=github&utm_medium=readme&utm_content=anpheros-sdk) and press **Get a sandbox key** (`sk_test_…`). Your sandbox has 30 synthetic patients.
+2. **Check it works:**
+
+   ```bash
+   curl -H "Authorization: Bearer $ANPHEROS_KEY" "https://platform.anpheros.com/fhir/R4/Patient?_count=3"
+   ```
+
+3. **Install an SDK and read a record:** `npm install @anpheros/sdk` or `dart pub add anpheros_sdk`, then run the code under [Connect](#connect), or clone [quickstart-ts](https://github.com/anpheros/anpheros-sdk/tree/main/examples/quickstart-ts).
+
 ## Who it is for
 
 Developers building patient and family health apps, medical-app backends, clinic and laboratory integrations, and AI assistants or agents that need a patient's structured medical context — without designing a medical database, a consent system and an audit trail from scratch.
 
 ## Get a sandbox key
 
-The sandbox is free and self-service. Sign in with Google on the [dashboard](https://platform.anpheros.com/dashboard/) and press **Get a sandbox key**: you get a sandbox project and a key instantly. Every sandbox project comes with its own 30 synthetic patients — six months of conditions, medications, allergies, lab results and vital signs — that you can change freely and reset at any time. Sandbox keys (`sk_test_…`) never reach real patient data.
+The sandbox is free and self-service. Sign in with Google on the [dashboard](https://platform.anpheros.com/dashboard/?utm_source=github&utm_medium=readme&utm_content=anpheros-sdk) and press **Get a sandbox key**: you get a sandbox project and a key instantly. Every sandbox project comes with its own 30 synthetic patients — six months of conditions, medications, allergies, lab results and vital signs — that you can change freely and reset at any time. Sandbox keys (`sk_test_…`) never reach real patient data.
 
-When you go live, production is for verified organisations with a data processing agreement, and production starts at €49 a month with the first month free ([pricing](https://developers.anpheros.com/guides/pricing)).
+When you go live, production is for verified organisations with a data processing agreement, and production starts at €49 a month with the first month free ([pricing](https://developers.anpheros.com/guides/pricing?utm_source=github&utm_medium=readme&utm_content=anpheros-sdk)).
 
 ## Connect
 
@@ -65,20 +78,35 @@ The record is made of standard FHIR R4 resources — 26 types, including `Observ
 
 The examples run against the free sandbox, where each sandbox project has its own 30 synthetic patients — see [Get a sandbox key](#get-a-sandbox-key).
 
+## Related repositories
+
+| Repository | What it is |
+|---|---|
+| [fhir-api-openapi](https://github.com/anpheros/fhir-api-openapi) | OpenAPI 3.1 spec and Postman collection of the API |
+| [mcp-server](https://github.com/anpheros/mcp-server) | the hosted FHIR MCP server for AI agents: configs for Claude, Cursor, VS Code |
+| [agent-skills](https://github.com/anpheros/agent-skills) | Agent Skill, Claude Code plugin, Cursor rules and AGENTS.md |
+| [fhir-synthetic-patients](https://github.com/anpheros/fhir-synthetic-patients) | the 30 synthetic patients as FHIR R4 Bundles and NDJSON |
+| [ips-examples](https://github.com/anpheros/ips-examples) | International Patient Summary documents in FHIR R4 |
+| [fhir-validate-action](https://github.com/anpheros/fhir-validate-action) | GitHub Action that validates FHIR R4 JSON in CI |
+| [lab-results-to-fhir](https://github.com/anpheros/lab-results-to-fhir) | CLI: CSV / HL7 v2 lab reports → FHIR Observations |
+| [healthcare-app-starters](https://github.com/anpheros/healthcare-app-starters) | Next.js and Flutter health app templates |
+
 ## Conformance
 
 Raw test results, published so they can be checked (test results, not certifications): [conformance/](https://github.com/anpheros/anpheros-sdk/tree/main/conformance). On 28 September 2026 the Standalone Launch group of the Inferno SMART App Launch STU2 test kit (v1.0.3) passed 22 of 22 tests against the platform. EHR launch is not supported.
 
 ## Documentation
 
-- Developer guides: https://developers.anpheros.com/guides/
-- Healthcare API: https://developers.anpheros.com/guides/healthcare-api
-- Healthcare API platform: https://developers.anpheros.com/guides/healthcare-api-platform
-- FHIR platform: https://developers.anpheros.com/guides/fhir
-- SDK guide: https://developers.anpheros.com/guides/sdks
-- API reference (OpenAPI): https://developers.anpheros.com/docs
-- For AI assistants: https://developers.anpheros.com/llms.txt
-- Anpheros: https://anpheros.com/
+- [Developer guides](https://developers.anpheros.com/guides/?utm_source=github&utm_medium=readme&utm_content=anpheros-sdk)
+- [Getting started](https://developers.anpheros.com/guides/getting-started?utm_source=github&utm_medium=readme&utm_content=anpheros-sdk)
+- [FHIR sandbox](https://developers.anpheros.com/guides/fhir-sandbox?utm_source=github&utm_medium=readme&utm_content=anpheros-sdk)
+- [Healthcare API](https://developers.anpheros.com/guides/healthcare-api?utm_source=github&utm_medium=readme&utm_content=anpheros-sdk)
+- [Healthcare API platform](https://developers.anpheros.com/guides/healthcare-api-platform?utm_source=github&utm_medium=readme&utm_content=anpheros-sdk)
+- [FHIR platform](https://developers.anpheros.com/guides/fhir?utm_source=github&utm_medium=readme&utm_content=anpheros-sdk)
+- [SDK guide](https://developers.anpheros.com/guides/sdks?utm_source=github&utm_medium=readme&utm_content=anpheros-sdk)
+- [API reference (OpenAPI)](https://developers.anpheros.com/docs?utm_source=github&utm_medium=readme&utm_content=anpheros-sdk)
+- [For AI assistants](https://developers.anpheros.com/llms.txt)
+- [Anpheros](https://anpheros.com/?utm_source=github&utm_medium=readme&utm_content=anpheros-sdk)
 
 ## Issues and security
 
