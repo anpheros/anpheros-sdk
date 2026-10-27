@@ -312,6 +312,9 @@ class TerminologyResource {
   /// One catalog entry (`SYM-…`, `CON-…`, `TRT-…`) with codes, names, description, sourced links and quoted indications.
   Future<Map<String, dynamic>> healthTerm(String id, {String lang = 'en'}) async =>
       (await _c.request('GET', '/v1/search/${_enc(id)}', query: {'lang': lang})).json;
+
+  /// Medical specialties used to group a record (SNOMED CT practice settings); search any type with `?specialty=<code>`.
+  Future<Map<String, dynamic>> specialties() async => (await _c.request('GET', '/v1/specialties')).json;
 }
 
 /// Raw FHIR R4 access at `/fhir/R4` for anything the simplified API does not cover.

@@ -247,6 +247,8 @@ export class Anpheros {
       this.get<Record<string, unknown>>(`/v1/search`, { q, type: o.type, lang: o.lang ?? 'en', limit: o.limit ?? 20, offset: o.offset ?? 0 }),
     /** One catalog entry (SYM-…, CON-…, TRT-…) with codes, names, description, sourced links and quoted indications. */
     healthTerm: (id: string, lang = 'en') => this.get<Record<string, unknown>>(`/v1/search/${enc(id)}`, { lang }),
+    /** Medical specialties used to group a record (SNOMED CT practice settings); search any type with `?specialty=<code>`. */
+    specialties: () => this.get<Record<string, unknown>>(`/v1/specialties`),
   };
 
   /** Raw FHIR R4 access at `/fhir/R4`. */
