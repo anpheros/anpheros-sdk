@@ -249,6 +249,12 @@ export class Anpheros {
     healthTerm: (id: string, lang = 'en') => this.get<Record<string, unknown>>(`/v1/search/${enc(id)}`, { lang }),
     /** Medical specialties used to group a record (SNOMED CT practice settings); search any type with `?specialty=<code>`. */
     specialties: () => this.get<Record<string, unknown>>(`/v1/specialties`),
+    /** ICD-10 → ICD-11 with the WHO mapping tables (all targets; several = needs a clinical choice). */
+    icd10To11: (code: string, lang = 'en') => this.get<Record<string, unknown>>(`/v1/icd/10-to-11/${enc(code)}`, { lang }),
+    /** One ICD-11 MMS code with its title in the official WHO translations. */
+    icd11: (code: string, lang = 'en') => this.get<Record<string, unknown>>(`/v1/icd/11/${enc(code)}`, { lang }),
+    /** Search ICD-11 MMS by code or words. */
+    searchIcd11: (q: string, lang = 'en', limit = 20) => this.get<Record<string, unknown>>(`/v1/icd/11/search`, { q, lang, limit }),
   };
 
   /** Raw FHIR R4 access at `/fhir/R4`. */

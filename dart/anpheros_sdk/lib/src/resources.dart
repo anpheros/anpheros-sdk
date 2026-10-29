@@ -315,6 +315,18 @@ class TerminologyResource {
 
   /// Medical specialties used to group a record (SNOMED CT practice settings); search any type with `?specialty=<code>`.
   Future<Map<String, dynamic>> specialties() async => (await _c.request('GET', '/v1/specialties')).json;
+
+  /// ICD-10 → ICD-11 with the WHO mapping tables (all targets; several = needs a clinical choice).
+  Future<Map<String, dynamic>> icd10To11(String code, {String lang = 'en'}) async =>
+      (await _c.request('GET', '/v1/icd/10-to-11/${_enc(code)}', query: {'lang': lang})).json;
+
+  /// One ICD-11 MMS code with its title in the official WHO translations.
+  Future<Map<String, dynamic>> icd11(String code, {String lang = 'en'}) async =>
+      (await _c.request('GET', '/v1/icd/11/${_enc(code)}', query: {'lang': lang})).json;
+
+  /// Search ICD-11 MMS by code or words.
+  Future<Map<String, dynamic>> searchIcd11(String q, {String lang = 'en', int limit = 20}) async =>
+      (await _c.request('GET', '/v1/icd/11/search', query: {'q': q, 'lang': lang, 'limit': '$limit'})).json;
 }
 
 /// Raw FHIR R4 access at `/fhir/R4` for anything the simplified API does not cover.
