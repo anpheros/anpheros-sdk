@@ -316,11 +316,11 @@ class TerminologyResource {
   /// Medical specialties used to group a record (SNOMED CT practice settings); search any type with `?specialty=<code>`.
   Future<Map<String, dynamic>> specialties() async => (await _c.request('GET', '/v1/specialties')).json;
 
-  /// ICD-10 → ICD-11 with the WHO mapping tables (all targets; several = needs a clinical choice).
+  /// ICD-10 → ICD-11 with the official mapping tables (all targets; several = needs a clinical choice).
   Future<Map<String, dynamic>> icd10To11(String code, {String lang = 'en'}) async =>
       (await _c.request('GET', '/v1/icd/10-to-11/${_enc(code)}', query: {'lang': lang})).json;
 
-  /// One ICD-11 MMS code with its title in the official WHO translations.
+  /// One ICD-11 MMS code with its title in the official translations.
   Future<Map<String, dynamic>> icd11(String code, {String lang = 'en'}) async =>
       (await _c.request('GET', '/v1/icd/11/${_enc(code)}', query: {'lang': lang})).json;
 
