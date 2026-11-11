@@ -55,7 +55,8 @@ API keys belong on servers. An app acting for a person uses OAuth instead: both 
 
 Both cover the whole public surface (`/v1`, `/fhir/R4`, `/oauth/token`, `/oauth/revoke`) with the
 same shape: `patients`, `observations`, `conditions`, `medications`, `documents`, `timeline`,
-`provenance`, `context`, `grants`, `terminology` and raw `fhir`. A test fails the
+`provenance`, `context`, `grants`, `terminology`, `patterns` and `research` (beta) and raw `fhir`. Both report the
+`X-Anpheros-Safety` header of a write through `onSafety`, so an app can show crisis lines at once. A test fails the
 build when a public route is missing from either SDK or when an SDK calls a route the server
 does not have.
 
@@ -104,6 +105,7 @@ Raw test results, published so they can be checked (test results, not certificat
 - [Healthcare API platform](https://developers.anpheros.com/guides/healthcare-api-platform?utm_source=github&utm_medium=readme&utm_content=anpheros-sdk)
 - [FHIR platform](https://developers.anpheros.com/guides/fhir?utm_source=github&utm_medium=readme&utm_content=anpheros-sdk)
 - [SDK guide](https://developers.anpheros.com/guides/sdks?utm_source=github&utm_medium=readme&utm_content=anpheros-sdk)
+- [Health patterns developer guide](https://developers.anpheros.com/guides/health-patterns-api?utm_source=github&utm_medium=readme&utm_content=anpheros-sdk)
 - [API reference (OpenAPI)](https://developers.anpheros.com/docs?utm_source=github&utm_medium=readme&utm_content=anpheros-sdk)
 - [For AI assistants](https://developers.anpheros.com/llms.txt)
 - [Anpheros](https://anpheros.com/?utm_source=github&utm_medium=readme&utm_content=anpheros-sdk)

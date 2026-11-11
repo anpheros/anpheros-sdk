@@ -25,6 +25,43 @@ class Fake {
 
 void main() {
   group('client', () {
+    test('safety: a write with X-Anpheros-Safety calls onSafety; crisis lines, research and feedback are typed', () async {
+      final key = 'fk_${'b' * 24}';
+      final fake = Fake()
+        ..script.add((_) => Fake.json({'resourceType': 'QuestionnaireResponse', 'id': 'qr1'}, status: 201, headers: {
+              'x-anpheros-safety': 'crisis-resources',
+              'link': '</v1/safety/crisis-resources>; rel="help"',
+            }))
+        ..script.add((_) => Fake.json({
+              'country': 'US', 'emergency_number': '911', 'crisis_line': {'name': '988 Suicide & Crisis Lifeline', 'number': '988'},
+              'directory': {'name': 'Find A Helpline', 'url': 'https://findahelpline.com'}, 'text': 'If you are in danger now, call 911.'
+            }))
+        ..script.add((_) => Fake.json({
+              'patient': 'Patient/p1', 'finding_key': key, 'method': null, 'shown': true, 'available': false,
+              'reason': {'key': 'finding.library_not_populated', 'text': 'The research library is still being built.'},
+              'interpretation': {'key': 'research.interpretation', 'text': 'Research describes groups of people.'}, 'research': null
+            }))
+        ..script.add((_) => Fake.json({'id': 'pfb_1', 'finding_key': key, 'response': 'unsure', 'note': null,
+              'created_at': '2026-11-10T10:00:00Z'}, status: 201));
+      final seen = <String>[];
+      final c = Anpheros(auth: AnpherosAuth.apiKey('sk_test_x'), baseUrl: 'https://p', httpClient: fake.client,
+          onSafety: (s) => seen.add('${s.value} ${s.link} ${s.status}'));
+      await c.fhir.create({'resourceType': 'QuestionnaireResponse', 'status': 'completed'});
+      expect(seen, ['crisis-resources /v1/safety/crisis-resources 201']);
+      final lines = await c.patterns.crisisResources(country: 'US');
+      expect(fake.requests[1].url.toString(), 'https://p/v1/safety/crisis-resources?country=US');
+      expect(lines.crisisLineNumber, '988');
+      expect(lines.directoryUrl, 'https://findahelpline.com');
+      final research = await c.patterns.research('p1', key);
+      expect(research.available, isFalse);
+      expect(research.reason!.key, 'finding.library_not_populated');
+      expect(research.verdict, isNull);
+      final fb = await c.patterns.feedback('p1', key, 'unsure');
+      expect(fb.response, 'unsure');
+      expect(fake.requests[3].headers['idempotency-key'], isNotNull);
+      expect(seen, hasLength(1));
+    });
+
     test('patterns: run, evidence, series and compare (beta, sandbox)', () async {
       final id = 'pf_${'a' * 24}';
       final window = {'start': '2026-04-19', 'end': '2026-10-15'};
@@ -55,6 +92,63 @@ void main() {
           secondStart: DateTime.utc(2026, 9, 1), secondEnd: DateTime.utc(2026, 10, 1));
       expect(fake.requests[3].method, 'POST');
       expect((jsonDecode(fake.requests[3].body) as Map)['second'], {'start': '2026-09-01', 'end': '2026-10-01'});
+    });
+
+    test('patterns: old and new payloads parse; method registry (engine 0.6.0)', () async {
+      final window = {'start': '2026-04-19', 'end': '2026-10-15'};
+      final step = {'variable': {'code': '29463-7', 'display': 'Body weight'}, 'need': 'days', 'missing': 4, 'within_days': 21,
+                    'by': '2026-11-05', 'entry': 'variable', 'method': 'trend_theil_sen_mann_kendall', 'type': 'trend'};
+      Map<String, dynamic> finding(Map<String, dynamic> extra) => {
+            'id': 'pf_1', 'type': 'trend', 'statistically_supported': false, 'summary_code': 'trend.no_change',
+            'summary_text': 'Weight showed no clear change.', 'window': window, 'limitations': [], 'evidence_total': 3, ...extra};
+      final fake = Fake()
+        // older server: no strength (since 5 Nov), no method status, no confidence, no next_steps
+        ..script.add((_) => Fake.json({
+              'patient': 'Patient/p1', 'window': window, 'engine_version': '0.5.0', 'time_basis': {}, 'tests_in_run': 1,
+              'family_fingerprint': null, 'not_computed': [], 'omitted': [], 'interpretation_guidance': 'g',
+              'findings': [finding({'method': {'name': 'trend_theil_sen_mann_kendall', 'version': '1.1.0', 'parameters': {}}})]
+            }))
+        ..script.add((_) => Fake.json({
+              'patient': 'Patient/p1', 'window': window, 'engine_version': '0.6.0', 'time_basis': {}, 'tests_in_run': 1,
+              'family_fingerprint': null, 'omitted': [], 'interpretation_guidance': 'g',
+              'not_computed': [{'type': 'trend', 'variables': [], 'window': window, 'reason': 'insufficient_data', 'detail': '', 'next_step': step}],
+              'next_steps': [step],
+              'findings': [finding({
+                'method': {'name': 'trend_theil_sen_mann_kendall', 'version': '1.1.0', 'parameters': {}, 'maturity': 'experimental',
+                           'patient_facing': false, 'notify': false},
+                'confidence': {'data_quality': {'level': 'medium'}, 'statistical': {'q': 0.2, 'effect_vs_threshold': 0.4}},
+                'disclosure': null})]
+            }))
+        ..script.add((_) => Fake.json({
+              'patient': 'Patient/p1', 'as_of': '2026-10-15', 'stale': false, 'refresh': {'queued': false, 'status': null},
+              'last_run': {}, 'consent': {}, 'interpretation_guidance': 'g', 'next_steps': [step],
+              'findings': [finding({'finding_key': 'fk_1', 'status': 'current', 'first_seen_at': 'x', 'last_changed_at': 'x',
+                                    'method': {'name': 'm', 'version': '1'}})]
+            }))
+        ..script.add((_) => Fake.json({
+              'engine_version': '0.6.0', 'data': [{'name': 'trend_theil_sen_mann_kendall', 'maturity': 'experimental'}],
+              'maturities': ['experimental', 'internally_validated', 'clinically_reviewed', 'production_approved'],
+              'disclosure': 'Method set with AI help; not reviewed by a clinician.', 'confidence_rules': {}
+            }));
+      final a = Anpheros(auth: AnpherosAuth.apiKey('sk_test_x'), baseUrl: 'https://api.test', httpClient: fake.client);
+      final old = await a.patterns.run('p1');
+      expect(old.findings.single.strength, isNull);
+      expect(old.findings.single.method.maturity, 'experimental');
+      expect(old.findings.single.confidence, isNull);
+      expect(old.nextSteps, isEmpty);
+      final fresh = await a.patterns.run('p1');
+      expect(fresh.findings.single.method.patientFacing, isFalse);
+      expect(fresh.findings.single.confidence!['data_quality']['level'], 'medium');
+      expect(fresh.findings.single.disclosure, isNull);
+      expect(fresh.nextSteps.single.missing, 4);
+      expect(fresh.nextSteps.single.withinDays, 21);
+      expect((fresh.notComputed.single['next_step'] as Map)['need'], 'days');
+      final stored = await a.patterns.current('p1');
+      expect(stored.nextSteps.single.entry, 'variable');
+      expect(stored.findings.single.method.notify, isFalse);
+      final methods = await a.patterns.methods();
+      expect(fake.requests[3].url.path, '/v1/patterns/methods');
+      expect(methods.disclosure, 'Method set with AI help; not reviewed by a clinician.');
     });
 
     test('sends the key, parses pages and models', () async {

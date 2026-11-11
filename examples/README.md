@@ -12,6 +12,7 @@ Every example runs against the free **sandbox** with a sandbox key (`sk_test_…
 | [ai-context-llm](ai-context-llm) | a question about a patient's record answered by a model of your choice (local or hosted), using the context API | TypeScript / Node 18+ |
 | [backend-ts](backend-ts) | a healthcare app backend: server-side key, patient list, record summary, a validated write, FHIR export, Anpheros errors mapped to clear answers | TypeScript / Node 18+ |
 | [lab-integration-ts](lab-integration-ts) | a synthetic lab report (HL7 v2 ORU^R01 or CSV) → FHIR R4 laboratory Observations, LOINC mapping, safe re-sending | TypeScript / Node 18+ |
+| [health-patterns](health-patterns) | a planted pattern on a synthetic patient: the finding, its evidence, method maturity, and the safety header with crisis lines | TypeScript / Node 18+ |
 | [fhir-transaction](fhir-transaction) | a FHIR R4 transaction bundle (Patient, Observation, Condition, MedicationStatement) and the resulting IPS | curl / FHIR JSON |
 
 All examples read `ANPHEROS_BASE_URL` when it is set, so they can also point to a local or test instance; by default they use `https://platform.anpheros.com`.

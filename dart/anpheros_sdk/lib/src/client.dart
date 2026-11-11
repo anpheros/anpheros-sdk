@@ -19,6 +19,7 @@ class Anpheros {
     http.Client? httpClient,
     this.maxRetries = 2,
     this.userAgent = 'anpheros_sdk/0.1.0 dart',
+    this.onSafety,
   })  : _http = httpClient ?? http.Client(),
         _rnd = Random() {
     patients = PatientsResource(this);
@@ -36,6 +37,7 @@ class Anpheros {
     webhooks = WebhooksResource(this);
     labs = LabsResource(this);
     terminology = TerminologyResource(this);
+    research = ResearchResource(this);
     fhir = FhirResource(this);
   }
 
@@ -65,10 +67,20 @@ class Anpheros {
   late final WebhooksResource webhooks;
   late final LabsResource labs;
   late final TerminologyResource terminology;
+
+  /// The research library (beta): `GET /v1/research/records`.
+  late final ResearchResource research;
   late final FhirResource fhir;
 
   /// The request id of the last response, to quote in support requests.
   String? lastRequestId;
+
+  /// Called whenever a response carries `X-Anpheros-Safety` (today: `crisis-resources`, after a PHQ-9 item 9 answer
+  /// above 0). Your app MUST then show crisis lines to the person at once: `patterns.crisisResources(country: …)`.
+  final void Function(SafetySignal signal)? onSafety;
+
+  /// The safety signal of the last response that carried one.
+  SafetySignal? lastSafety;
 
   void close() => _http.close();
 
@@ -125,6 +137,11 @@ class Anpheros {
       if (res.statusCode >= 400) {
         throw AnpherosException.fromResponse(res.statusCode, body, lastRequestId);
       }
+      final signal = SafetySignal.fromHeaders(res.headers, method: method, path: path, status: res.statusCode);
+      if (signal != null) {
+        lastSafety = signal;
+        onSafety?.call(signal);
+      }
       return AnpherosResponse(res.statusCode, body, res.headers, res.bodyBytes);
     }
   }
@@ -154,6 +171,22 @@ class Anpheros {
     b[8] = (b[8] & 0x3f) | 0x80;
     final h = b.map((x) => x.toRadixString(16).padLeft(2, '0')).join();
     return '${h.substring(0, 8)}-${h.substring(8, 12)}-${h.substring(12, 16)}-${h.substring(16, 20)}-${h.substring(20)}';
+  }
+}
+
+/// The safety signal of a write (`X-Anpheros-Safety`), with the `Link` to the crisis lines.
+class SafetySignal {
+  SafetySignal({required this.value, this.link, required this.method, required this.path, required this.status});
+  final String value, method, path;
+  final String? link;
+  final int status;
+
+  /// The signal in a response's headers (lower-case names, as `package:http` gives them), or null.
+  static SafetySignal? fromHeaders(Map<String, String> headers, {String method = '', String path = '', int status = 0}) {
+    final value = headers['x-anpheros-safety'];
+    if (value == null || value.isEmpty) return null;
+    final m = RegExp(r'<([^>]+)>').firstMatch(headers['link'] ?? '');
+    return SafetySignal(value: value, link: m?.group(1), method: method, path: path, status: status);
   }
 }
 

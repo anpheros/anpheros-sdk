@@ -4,7 +4,9 @@ import type {
   AuthorType, Bundle, Concept, Condition, ConditionInput, ContextRequest, ContextResult, Document, DocumentInput, FhirResource,
   GrantInfo, Medication, MedicationInput, Observation, ObservationInput, Page, Patient, PatientInput, ProvenanceEntry, TimelineItem,
   MyPatient, AccessEntry, WebhookEndpoint, WebhookDelivery, LabImportResult,
-  CompareInput, CompareResult, PatternEvidence, PatternFinding, PatternRun, PatternStrength, SeriesResult, NeuroSummary } from './models.js';
+  CompareInput, CompareResult, PatternEvidence, PatternFinding, PatternRun, PatternStrength, SeriesResult, NeuroSummary,
+  StoredPatterns, PatternHistory, PatternFeedbackInput, PatternFeedbackResult, PatternMethods, CrisisResources,
+  ResearchRecord, ResearchRecordPage, FindingResearch } from './models.js';
 
 export interface AnpherosOptions {
   auth: Auth;
@@ -12,6 +14,21 @@ export interface AnpherosOptions {
   fetch?: typeof fetch;
   /** Retries on 429/502/503/504 and network errors (default 2). */
   maxRetries?: number;
+  /** Called whenever a response carries `X-Anpheros-Safety` (today: `crisis-resources`, after a PHQ-9 item 9 answer
+   *  above 0). Your app MUST then show crisis lines to the person at once: `patterns.crisisResources(country)`. */
+  onSafety?: (signal: SafetySignal) => void;
+}
+
+/** The safety signal of a write (`X-Anpheros-Safety`), with the `Link` to the crisis lines. */
+export interface SafetySignal { value: string; link: string | null; method: string; path: string; status: number }
+
+/** The safety signal in a response's headers, or `null`. Use it when you call `request()` yourself. */
+export function safetySignal(headers: Headers, method = '', path = '', status = 0): SafetySignal | null {
+  const value = headers.get('x-anpheros-safety');
+  if (!value) return null;
+  const link = headers.get('link');
+  const m = link ? /<([^>]+)>/.exec(link) : null;
+  return { value, link: m ? m[1] : null, method, path, status };
 }
 
 interface RequestOptions {
@@ -38,6 +55,9 @@ export class Anpheros {
   readonly auth: Auth;
   private readonly f: typeof fetch;
   private readonly maxRetries: number;
+  private readonly onSafety?: (signal: SafetySignal) => void;
+  /** The safety signal of the last response that carried one (see `AnpherosOptions.onSafety`). */
+  lastSafety?: SafetySignal;
   /** Request id of the last response, to quote in support requests. */
   lastRequestId?: string;
 
@@ -46,6 +66,7 @@ export class Anpheros {
     this.baseUrl = (o.baseUrl ?? 'https://platform.anpheros.com').replace(/\/$/, '');
     this.f = o.fetch ?? fetch;
     this.maxRetries = o.maxRetries ?? 2;
+    this.onSafety = o.onSafety;
   }
 
   /** Low-level call: auth, retries with backoff, one token refresh on 401, typed errors. */
@@ -74,6 +95,8 @@ export class Anpheros {
       const ct = res.headers.get('content-type') ?? '';
       const parsed = ct.includes('json') ? await res.json().catch(() => null) : null;
       if (res.status >= 400) throw AnpherosError.fromResponse(res.status, parsed, this.lastRequestId);
+      const signal = safetySignal(res.headers, method, path, res.status);
+      if (signal) { this.lastSafety = signal; this.onSafety?.(signal); }
       return { status: res.status, body: parsed as T, headers: res.headers, raw: res };
     }
   }
@@ -180,6 +203,30 @@ export class Anpheros {
       this.get<SeriesResult>(`/v1/patients/${enc(patientId)}/series`, q),
     compare: (patientId: string, input: CompareInput) =>
       this.post<CompareResult>(`/v1/patients/${enc(patientId)}/patterns/compare`, input),
+    /** Stored findings, refreshed in the background (only the trusted project the person gave the `anpheros/patterns`
+     *  feature consent to). A 409 `not_computed_yet` means the first run is queued; other credentials get 403. */
+    current: (patientId: string, q: { types?: string; supported_only?: boolean; include?: 'events' } = {}) =>
+      this.get<StoredPatterns>(`/v1/patients/${enc(patientId)}/patterns/current`,
+        { types: q.types, supported_only: q.supported_only === undefined ? undefined : String(q.supported_only), include: q.include }),
+    /** When a stored finding appeared, gained or lost statistical support, and went. */
+    history: (patientId: string, findingKey: string) =>
+      this.get<PatternHistory>(`/v1/patients/${enc(patientId)}/patterns/${enc(findingKey)}/history`),
+    /** The person's feedback on a stored finding; kept apart from the record and never used to change thresholds. */
+    feedback: (patientId: string, findingKey: string, input: PatternFeedbackInput) =>
+      this.post<PatternFeedbackResult>(`/v1/patients/${enc(patientId)}/patterns/${enc(findingKey)}/feedback`, input),
+    /** Published research on a stored finding (same gate as `current`): `investigated` or `not_adequately_investigated`,
+     *  each record with its citation, design limits and status. From the local research library only; research describes
+     *  groups of people, not this person, and "supports" / "contradicts" come only from human reviewers. */
+    research: (patientId: string, findingKey: string) =>
+      this.get<FindingResearch>(`/v1/patients/${enc(patientId)}/patterns/${enc(findingKey)}/research`),
+    /** The engine's method registry: version, maturity, whether findings may be shown to the person or notify, inputs,
+     *  minimums, limitations and validation. No patient data. */
+    methods: () => this.get<PatternMethods>('/v1/patterns/methods'),
+    /** Crisis lines to show the person AT ONCE when a write answered with the `X-Anpheros-Safety: crisis-resources`
+     *  header (PHQ-9 item 9 above 0; `AnpherosOptions.onSafety` tells you). No authentication, no patient data; plain
+     *  English text. */
+    crisisResources: (country?: string) =>
+      this.get<CrisisResources>('/v1/safety/crisis-resources', { country }),
   };
 
   readonly grants = {
@@ -255,6 +302,16 @@ export class Anpheros {
     icd11: (code: string, lang = 'en') => this.get<Record<string, unknown>>(`/v1/icd/11/${enc(code)}`, { lang }),
     /** Search ICD-11 MMS by code or words. */
     searchIcd11: (q: string, lang = 'en', limit = 20) => this.get<Record<string, unknown>>(`/v1/icd/11/search`, { q, lang, limit }),
+  };
+
+  /** The research library (beta): publications, preprints and trial registrations with identifiers, licence, evidence
+   *  class and status (retracted / withdrawn records come only with their status). Catalogue data, no patient data. */
+  readonly research = {
+    /** `exclude_status`: comma-separated statuses left out server side, e.g. `retracted,withdrawn`. */
+    search: (q: { concept?: string; q?: string; evidence_class?: string; status?: string; exclude_status?: string;
+                  limit?: number; cursor?: string } = {}) =>
+      this.get<ResearchRecordPage>('/v1/research/records', q),
+    record: (recordId: string) => this.get<ResearchRecord>(`/v1/research/records/${enc(recordId)}`),
   };
 
   /** Raw FHIR R4 access at `/fhir/R4`. */

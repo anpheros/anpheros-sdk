@@ -565,17 +565,35 @@ const List<String> webhookEventTypes = [
   'proposal.created',
   'result.released',
   'access_request.created',
+  'patterns.updated',
   'ping',
 ];
 
 /// One health-pattern finding (beta; on production records only under a patient's `anpheros/patterns` consent): what the record shows over a period, with its evidence,
 /// method and limitations. Derived by fixed statistical rules: not a diagnosis, and an association is not a cause.
 class PatternFinding {
-  PatternFinding({required this.id, required this.type, this.subtype, required this.strength, required this.statisticallySupported,
+  PatternFinding({required this.id, required this.type, this.subtype, this.strength, required this.statisticallySupported,
       required this.summaryCode, required this.summaryText, required this.windowStart, required this.windowEnd,
-      required this.limitations, required this.evidenceTotal, required this.raw});
-  final String id, type, strength, summaryCode, summaryText, windowStart, windowEnd;
+      required this.limitations, required this.evidenceTotal, required this.method, this.confidence, this.disclosure,
+      this.shownOnlyIfSupported = false, required this.raw});
+  final String id, type, summaryCode, summaryText, windowStart, windowEnd;
+
+  /// True for `step_change`, `day_of_week`, `time_of_day` and `month_of_year`: show it to a person only when supported.
+  final bool shownOnlyIfSupported;
   final String? subtype;
+
+  /// Deprecated: the server has not sent a strength grade since 5 Nov 2026; null on current payloads.
+  final String? strength;
+
+  /// The method, with its maturity and whether its findings may be shown to the person or notify (engine 0.6.0).
+  final PatternMethodRef method;
+
+  /// Five separate axes (`data_quality`, `statistical`, `extraction`, `generalizability`, `research`), no single score;
+  /// null on findings stored before engine 0.6.0.
+  final Map<String, dynamic>? confidence;
+
+  /// The standard disclosure to show with the finding when its method is patient-facing; null otherwise.
+  final String? disclosure;
 
   /// Only `true` means statistical support; weak and not_tested findings are descriptions.
   final bool statisticallySupported;
@@ -588,25 +606,185 @@ class PatternFinding {
   final Map<String, dynamic> raw;
 
   factory PatternFinding.fromJson(Map<String, dynamic> j) => PatternFinding(
-      id: j['id'] as String, type: j['type'] as String, subtype: _s(j['subtype']), strength: j['strength'] as String,
+      id: j['id'] as String, type: j['type'] as String, subtype: _s(j['subtype']), strength: _s(j['strength']),
       statisticallySupported: j['statistically_supported'] as bool? ?? false, summaryCode: j['summary_code'] as String,
       summaryText: j['summary_text'] as String, windowStart: (j['window'] as Map)['start'] as String,
       windowEnd: (j['window'] as Map)['end'] as String,
       limitations: ((j['limitations'] as List?) ?? []).map((e) => (e as Map)['code'] as String).toList(),
-      evidenceTotal: (j['evidence_total'] as num?)?.toInt() ?? 0, raw: j);
+      evidenceTotal: (j['evidence_total'] as num?)?.toInt() ?? 0,
+      method: PatternMethodRef.fromJson(((j['method'] as Map?) ?? const {}).cast<String, dynamic>()),
+      confidence: (j['confidence'] as Map?)?.cast<String, dynamic>(), disclosure: _s(j['disclosure']),
+      shownOnlyIfSupported: j['shown_only_if_supported'] as bool? ?? selectionSubtypes.contains(j['subtype']), raw: j);
+
+  /// Subtypes that pick what they name among many tries; the fallback when an older server leaves out
+  /// `shown_only_if_supported` (as the first-party backend does).
+  static const Set<String> selectionSubtypes = {'step_change', 'day_of_week', 'time_of_day', 'month_of_year'};
+}
+
+/// The method behind a finding (engine 0.6.0 adds the registry status; older servers send name, version, parameters).
+class PatternMethodRef {
+  PatternMethodRef({required this.name, required this.version, required this.maturity, required this.patientFacing,
+      required this.notify, required this.parameters});
+  final String name, version;
+
+  /// `experimental`, `internally_validated`, `clinically_reviewed` or `production_approved`; `experimental` when absent.
+  final String maturity;
+
+  /// Only patient-facing methods may be shown to the person (with the disclosure); only those marked `notify` may notify.
+  final bool patientFacing, notify;
+  final Map<String, dynamic> parameters;
+
+  factory PatternMethodRef.fromJson(Map<String, dynamic> j) => PatternMethodRef(
+      name: j['name'] as String? ?? '', version: j['version'] as String? ?? '', maturity: j['maturity'] as String? ?? 'experimental',
+      patientFacing: j['patient_facing'] as bool? ?? false, notify: j['notify'] as bool? ?? false,
+      parameters: ((j['parameters'] as Map?) ?? const {}).cast<String, dynamic>());
+}
+
+/// What would unlock a test that could not run (engine 0.6.0). `withinDays` and `by` are null for events, episodes and
+/// nights, which depend on what happens, not only on recording.
+class PatternNextStep {
+  PatternNextStep({required this.variable, required this.need, required this.missing, this.withinDays, this.by, required this.entry,
+      required this.method, required this.type, this.patientFacing = false});
+  final Map<String, dynamic> variable;
+
+  /// Whether the method this step unlocks is patient-facing now; show the step to a person only when true.
+  final bool patientFacing;
+
+  /// `days`, `events`, `episodes` or `nights`.
+  final String need;
+  final int missing;
+  final int? withinDays;
+  final String? by;
+
+  /// `variable`: days with a value of this variable; `any`: days with any entry by the person.
+  final String entry;
+  final String method, type;
+
+  factory PatternNextStep.fromJson(Map<String, dynamic> j) => PatternNextStep(
+      variable: ((j['variable'] as Map?) ?? const {}).cast<String, dynamic>(), need: j['need'] as String? ?? 'days',
+      missing: (j['missing'] as num?)?.toInt() ?? 0, withinDays: (j['within_days'] as num?)?.toInt(), by: _s(j['by']),
+      entry: j['entry'] as String? ?? 'variable', method: j['method'] as String? ?? '', type: j['type'] as String? ?? '',
+      patientFacing: j['patient_facing'] as bool? ?? false);
+}
+
+List<PatternNextStep> _nextSteps(Object? v) =>
+    ((v as List?) ?? const []).map((e) => PatternNextStep.fromJson((e as Map).cast<String, dynamic>())).toList();
+
+/// The engine's method registry (`GET /v1/patterns/methods`): one entry per method, with maturity and validation.
+class PatternMethods {
+  PatternMethods({required this.engineVersion, required this.data, required this.maturities, required this.disclosure,
+      required this.confidenceRules});
+  final String engineVersion, disclosure;
+  final List<Map<String, dynamic>> data;
+  final List<String> maturities;
+  final Map<String, dynamic> confidenceRules;
+
+  factory PatternMethods.fromJson(Map<String, dynamic> j) => PatternMethods(
+      engineVersion: j['engine_version'] as String? ?? '',
+      data: ((j['data'] as List?) ?? const []).map((e) => (e as Map).cast<String, dynamic>()).toList(),
+      maturities: ((j['maturities'] as List?) ?? const []).map((e) => e as String).toList(), disclosure: j['disclosure'] as String? ?? '',
+      confidenceRules: ((j['confidence_rules'] as Map?) ?? const {}).cast<String, dynamic>());
+}
+
+/// One event in the history of a stored finding: `appeared`, `supported`, `unsupported` or `gone`.
+class PatternEvent {
+  PatternEvent({required this.event, required this.at, required this.engineVersion, required this.trigger});
+  final String event, at, engineVersion, trigger;
+
+  factory PatternEvent.fromJson(Map<String, dynamic> j) => PatternEvent(
+      event: j['event'] as String, at: j['at'] as String, engineVersion: j['engine_version'] as String, trigger: j['trigger'] as String);
+}
+
+/// A stored finding (beta): kept up to date in the background under the person's feature consent. `findingKey` stays the
+/// same when new readings arrive; `id` changes with the data.
+class StoredPatternFinding {
+  StoredPatternFinding({required this.findingKey, required this.id, required this.type, this.subtype, required this.status,
+      required this.statisticallySupported, required this.summaryCode, required this.summaryText, required this.firstSeenAt,
+      required this.lastChangedAt, this.becameSupportedAt, required this.events, required this.method, this.confidence,
+      this.disclosure, this.shown = false, this.shownSince, required this.raw});
+  final String findingKey, id, type, status, summaryCode, summaryText, firstSeenAt, lastChangedAt;
+  final String? subtype, becameSupportedAt;
+
+  /// The display rule (`StoredPatterns.displayRule`): show the finding to the person only when `shown` and
+  /// `method.patientFacing` are both true. `shownSince`: last day of the window of the run that made it shown.
+  final bool shown;
+  final String? shownSince;
+
+  /// The method with its maturity, `patientFacing` and `notify` (engine 0.6.0).
+  final PatternMethodRef method;
+
+  /// Five separate axes, no single score; null on findings stored before engine 0.6.0.
+  final Map<String, dynamic>? confidence;
+
+  /// The standard disclosure when the method is patient-facing; null otherwise.
+  final String? disclosure;
+
+  /// Only `true` means statistical support; other findings are descriptions.
+  final bool statisticallySupported;
+
+  /// Filled with `includeEvents: true`.
+  final List<PatternEvent> events;
+
+  /// The whole finding as sent by the server (window, evidence, method, limitations, safety…).
+  final Map<String, dynamic> raw;
+
+  factory StoredPatternFinding.fromJson(Map<String, dynamic> j) => StoredPatternFinding(
+      findingKey: j['finding_key'] as String, id: j['id'] as String, type: j['type'] as String, subtype: _s(j['subtype']),
+      status: j['status'] as String, statisticallySupported: j['statistically_supported'] as bool? ?? false,
+      summaryCode: j['summary_code'] as String, summaryText: j['summary_text'] as String, firstSeenAt: j['first_seen_at'] as String,
+      lastChangedAt: j['last_changed_at'] as String, becameSupportedAt: _s(j['became_supported_at']),
+      events: ((j['events'] as List?) ?? []).map((e) => PatternEvent.fromJson(e as Map<String, dynamic>)).toList(),
+      method: PatternMethodRef.fromJson(((j['method'] as Map?) ?? const {}).cast<String, dynamic>()),
+      confidence: (j['confidence'] as Map?)?.cast<String, dynamic>(), disclosure: _s(j['disclosure']),
+      shown: j['shown'] as bool? ?? false, shownSince: _s(j['shown_since']), raw: j);
+}
+
+/// The stored findings of a record, with the last background run and whether it is stale.
+class StoredPatterns {
+  StoredPatterns({required this.patient, required this.asOf, required this.stale, required this.queued, this.refreshStatus,
+      required this.lastRun, required this.consent, required this.findings, this.nextSteps = const [],
+      this.displayRule = const {}, required this.interpretationGuidance});
+
+  /// The rule behind `shown` (`version`, `tick_days`, `show_after_days`, `hide_after_days`, `text`).
+  final Map<String, dynamic> displayRule;
+  final String patient, asOf, interpretationGuidance;
+
+  /// True once the person's local date has passed `asOf`; a refresh is due.
+  final bool stale;
+
+  /// A new run is waiting; `refreshStatus` is `pending`, `failed` or null.
+  final bool queued;
+  final String? refreshStatus;
+  final Map<String, dynamic> lastRun, consent;
+  final List<StoredPatternFinding> findings;
+
+  /// From the last run, fewest entries first (engine 0.6.0); empty for older runs.
+  final List<PatternNextStep> nextSteps;
+
+  factory StoredPatterns.fromJson(Map<String, dynamic> j) => StoredPatterns(
+      patient: j['patient'] as String, asOf: j['as_of'] as String, stale: j['stale'] as bool? ?? false,
+      queued: ((j['refresh'] as Map?) ?? const {})['queued'] as bool? ?? false, refreshStatus: _s(((j['refresh'] as Map?) ?? const {})['status']),
+      lastRun: ((j['last_run'] as Map?) ?? const {}).cast<String, dynamic>(), consent: ((j['consent'] as Map?) ?? const {}).cast<String, dynamic>(),
+      findings: ((j['findings'] as List?) ?? []).map((e) => StoredPatternFinding.fromJson(e as Map<String, dynamic>)).toList(),
+      nextSteps: _nextSteps(j['next_steps']), displayRule: ((j['display_rule'] as Map?) ?? const {}).cast<String, dynamic>(),
+      interpretationGuidance: j['interpretation_guidance'] as String? ?? '');
 }
 
 /// A run of the pattern engine for one patient and window.
 class PatternRun {
   PatternRun({required this.patient, required this.engineVersion, required this.testsInRun, this.familyFingerprint, required this.findings,
-      required this.notComputed, required this.omitted, required this.interpretationGuidance});
+      required this.notComputed, this.nextSteps = const [], required this.omitted, required this.interpretationGuidance});
   final String patient, engineVersion, interpretationGuidance;
   final int testsInRun;
   final String? familyFingerprint;
   final List<PatternFinding> findings;
 
-  /// What could not be computed and why (too little data, no variation…): not findings.
+  /// What could not be computed and why (too little data, no variation…): not findings. Since engine 0.6.0 each may carry
+  /// a `next_step` (see [PatternNextStep]).
   final List<Map<String, dynamic>> notComputed;
+
+  /// What would unlock the tests that could not run, fewest entries first (engine 0.6.0); empty on older servers.
+  final List<PatternNextStep> nextSteps;
 
   /// What the consent behind the credential left out.
   final List<String> omitted;
@@ -615,6 +793,69 @@ class PatternRun {
       patient: j['patient'] as String, engineVersion: j['engine_version'] as String, testsInRun: (j['tests_in_run'] as num).toInt(),
       familyFingerprint: _s(j['family_fingerprint']),
       findings: (j['findings'] as List).map((e) => PatternFinding.fromJson(e as Map<String, dynamic>)).toList(),
-      notComputed: (j['not_computed'] as List).map((e) => e as Map<String, dynamic>).toList(),
+      notComputed: (j['not_computed'] as List).map((e) => e as Map<String, dynamic>).toList(), nextSteps: _nextSteps(j['next_steps']),
       omitted: (j['omitted'] as List).map((e) => e as String).toList(), interpretationGuidance: j['interpretation_guidance'] as String);
+}
+
+/// The person's feedback on a stored finding, as the platform kept it (`POST …/patterns/{findingKey}/feedback`).
+class PatternFeedbackResult {
+  PatternFeedbackResult({required this.id, required this.findingKey, required this.response, this.note, required this.createdAt});
+  final String id, findingKey, response, createdAt;
+  final String? note;
+
+  factory PatternFeedbackResult.fromJson(Map<String, dynamic> j) => PatternFeedbackResult(
+      id: j['id'] as String, findingKey: j['finding_key'] as String, response: j['response'] as String,
+      note: _s(j['note']), createdAt: j['created_at'] as String);
+}
+
+/// A server text with its translation key (`key`) and English base (`text`).
+class KeyedText {
+  KeyedText({required this.key, required this.text});
+  final String key, text;
+
+  static KeyedText? fromJson(Object? v) {
+    if (v is! Map) return null;
+    return KeyedText(key: v['key']?.toString() ?? '', text: v['text']?.toString() ?? '');
+  }
+}
+
+/// Published research on a stored finding (`GET …/patterns/{findingKey}/research`, beta). When [available] is false,
+/// [reason] says why (for example `finding.library_not_populated` while the library is being built) and [research] is
+/// null: show the reason, never a verdict. Research describes groups of people, not this person.
+class FindingResearch {
+  FindingResearch({required this.patient, required this.findingKey, required this.shown, required this.available, this.reason,
+      this.interpretation, this.research, required this.raw});
+  final String patient, findingKey;
+  final bool shown, available;
+  final KeyedText? reason, interpretation;
+
+  /// `verdict` (`investigated` / `not_adequately_investigated`), `best_level`, `counts`, `missing`, `summary`, `records`
+  /// (each with its citation, design limits and status), `excluded`, `curation` (human reviewers only), `notes`.
+  final Map<String, dynamic>? research;
+
+  /// `investigated`, `not_adequately_investigated`, or null when not [available].
+  String? get verdict => _s(research?['verdict']);
+  final Map<String, dynamic> raw;
+
+  factory FindingResearch.fromJson(Map<String, dynamic> j) => FindingResearch(
+      patient: j['patient']?.toString() ?? '', findingKey: j['finding_key']?.toString() ?? '', shown: j['shown'] as bool? ?? false,
+      available: j['available'] as bool? ?? false, reason: KeyedText.fromJson(j['reason']),
+      interpretation: KeyedText.fromJson(j['interpretation']), research: (j['research'] as Map?)?.cast<String, dynamic>(), raw: j);
+}
+
+/// Crisis lines for one country (`GET /v1/safety/crisis-resources`). Show [text] to the person at once.
+class CrisisResources {
+  CrisisResources({this.country, this.emergencyNumber, this.crisisLineName, this.crisisLineNumber, required this.directoryName,
+      required this.directoryUrl, required this.text});
+  final String? country, emergencyNumber, crisisLineName, crisisLineNumber;
+  final String directoryName, directoryUrl, text;
+
+  factory CrisisResources.fromJson(Map<String, dynamic> j) {
+    final line = (j['crisis_line'] as Map?) ?? const {};
+    final dir = (j['directory'] as Map?) ?? const {};
+    return CrisisResources(
+        country: _s(j['country']), emergencyNumber: _s(j['emergency_number']), crisisLineName: _s(line['name']),
+        crisisLineNumber: _s(line['number']), directoryName: dir['name']?.toString() ?? 'Find A Helpline',
+        directoryUrl: dir['url']?.toString() ?? 'https://findahelpline.com', text: j['text']?.toString() ?? '');
+  }
 }

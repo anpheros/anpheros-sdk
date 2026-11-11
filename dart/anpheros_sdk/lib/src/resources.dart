@@ -224,6 +224,49 @@ class PatternsResource {
         'second': {'start': _day(secondStart), 'end': _day(secondEnd)},
       }))
           .json;
+
+  /// Stored findings, refreshed in the background (only the trusted project the person gave the `anpheros/patterns`
+  /// feature consent to). A 409 `not_computed_yet` means the first run is queued; other credentials get 403.
+  Future<StoredPatterns> current(String patientId, {List<String>? types, bool? supportedOnly, bool includeEvents = false}) async =>
+      StoredPatterns.fromJson((await _c.request('GET', '/v1/patients/${_enc(patientId)}/patterns/current', query: {
+        if (types != null) 'types': types.join(','),
+        if (supportedOnly != null) 'supported_only': '$supportedOnly',
+        if (includeEvents) 'include': 'events',
+      }))
+          .json);
+
+  /// Published research on a stored finding (same gate as [current]): `investigated` or `not_adequately_investigated`,
+  /// each record with its citation, design limits and status. From the local research library only; research describes
+  /// groups of people, not this person, and "supports" / "contradicts" come only from human reviewers.
+  Future<FindingResearch> research(String patientId, String findingKey) async => FindingResearch.fromJson(
+      (await _c.request('GET', '/v1/patients/${_enc(patientId)}/patterns/${_enc(findingKey)}/research')).json);
+
+  /// The engine's method registry: version, maturity, whether findings may be shown to the person or notify, inputs,
+  /// minimums, limitations and validation. No patient data.
+  Future<PatternMethods> methods() async => PatternMethods.fromJson((await _c.request('GET', '/v1/patterns/methods')).json);
+
+  /// Crisis lines to show the person AT ONCE when a write answered with the `X-Anpheros-Safety: crisis-resources`
+  /// header (PHQ-9 item 9 above 0; `Anpheros.onSafety` tells you). No authentication, no patient data; `text` is
+  /// plain English.
+  Future<CrisisResources> crisisResources({String? country}) async => CrisisResources.fromJson(
+      (await _c.request('GET', '/v1/safety/crisis-resources', query: {if (country != null) 'country': country})).json);
+
+  /// When a stored finding appeared, gained or lost statistical support, and went.
+  Future<List<PatternEvent>> history(String patientId, String findingKey) async =>
+      (((await _c.request('GET', '/v1/patients/${_enc(patientId)}/patterns/${_enc(findingKey)}/history')).json['data'] as List?) ?? [])
+          .map((e) => PatternEvent.fromJson(e as Map<String, dynamic>))
+          .toList();
+
+  /// The person's feedback on a stored finding: `matches`, `does_not_match`, `unsure` or `more_info`, with an optional
+  /// note (at most 500 characters). Kept apart from the record and never used to change thresholds.
+  Future<PatternFeedbackResult> feedback(String patientId, String findingKey, String response, {String? note}) async =>
+      PatternFeedbackResult.fromJson((await _c.request('POST', '/v1/patients/${_enc(patientId)}/patterns/${_enc(findingKey)}/feedback',
+              json: {
+                'response': response,
+                if (note != null) 'note': note,
+              },
+              idempotent: true))
+          .json);
 }
 
 class ProvenanceResource {
@@ -327,6 +370,38 @@ class TerminologyResource {
   /// Search ICD-11 MMS by code or words.
   Future<Map<String, dynamic>> searchIcd11(String q, {String lang = 'en', int limit = 20}) async =>
       (await _c.request('GET', '/v1/icd/11/search', query: {'q': q, 'lang': lang, 'limit': '$limit'})).json;
+}
+
+/// The research library (beta): publications, preprints and trial registrations with identifiers, licence, evidence
+/// class and status (retracted / withdrawn records come only with their status). Catalogue data, no patient data.
+class ResearchResource {
+  ResearchResource(this._c);
+  final Anpheros _c;
+
+  /// Search by `concept` (SYM-…, CON-…, TRT-… or a token such as `icd10:G43`, `atc:N02CC`), title words, class or status.
+  /// [excludeStatus]: comma-separated statuses left out server side, e.g. `retracted,withdrawn`.
+  Future<Map<String, dynamic>> search(
+          {String? concept,
+          String? q,
+          String? evidenceClass,
+          String? status,
+          String? excludeStatus,
+          int limit = 20,
+          String? cursor}) async =>
+      (await _c.request('GET', '/v1/research/records', query: {
+        if (concept != null) 'concept': concept,
+        if (q != null) 'q': q,
+        if (evidenceClass != null) 'evidence_class': evidenceClass,
+        if (status != null) 'status': status,
+        if (excludeStatus != null) 'exclude_status': excludeStatus,
+        'limit': '$limit',
+        if (cursor != null) 'cursor': cursor,
+      }))
+          .json;
+
+  /// One record with its concepts and status history (retraction, correction, expression of concern, newer version).
+  Future<Map<String, dynamic>> record(String recordId) async =>
+      (await _c.request('GET', '/v1/research/records/${_enc(recordId)}')).json;
 }
 
 /// Raw FHIR R4 access at `/fhir/R4` for anything the simplified API does not cover.

@@ -36,3 +36,33 @@ Every object carries `fhir` (its `/fhir/R4` reference); `anpheros.fhir` gives ra
 Errors are `AnpherosException` with `status`, `type`, `message`, `field` and `requestId`.
 Creates send an `Idempotency-Key` automatically; 429/5xx are retried with backoff; expired OAuth
 tokens are refreshed once and the call retried.
+
+## Health patterns (beta)
+
+What changed in a record and what recurs, by fixed statistical rules: not diagnoses, not causes. Full guide:
+[Health patterns developer guide](https://developers.anpheros.com/guides/health-patterns-api).
+
+```dart
+// Sandbox: p01 carries a planted pattern (home blood pressure falling).
+final bundle = await anpheros.fhir.search('Patient', {'identifier': 'https://anpheros.com/fhir/sid/sandbox-persona|p01'});
+final patientId = ((bundle['entry'] as List).first as Map)['resource']['id'] as String;
+final run = await anpheros.patterns.run(patientId, windowDays: 180);
+for (final f in run.findings) {
+  print('${f.summaryText} supported=${f.statisticallySupported} maturity=${f.method.maturity}');
+}
+
+// Trusted first-party project, under the person's anpheros/patterns consent: stored findings.
+final stored = await anpheros.patterns.current(patientId);
+final forThePerson = stored.findings.where((f) => f.shown && f.method.patientFacing).toList();
+final research = await anpheros.patterns.research(patientId, forThePerson.first.findingKey);
+if (!research.available) print(research.reason?.key);   // e.g. finding.library_not_populated: never a verdict
+await anpheros.patterns.feedback(patientId, forThePerson.first.findingKey, 'unsure');
+```
+
+**Safety.** A write that records a PHQ-9 item 9 answer above 0 comes back with `X-Anpheros-Safety: crisis-resources`;
+show crisis lines to the person at once:
+
+```dart
+late final Anpheros anpheros;
+anpheros = Anpheros(auth: auth, onSafety: (_) async => showCrisisSheet(await anpheros.patterns.crisisResources(country: 'US')));
+```

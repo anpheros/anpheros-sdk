@@ -155,3 +155,63 @@ test('patterns: run, evidence, series and compare (beta, sandbox credentials onl
   assert.equal(JSON.parse(await calls[3].text()).first.start, '2026-04-01');
   assert.equal(cmp.finding, null);
 });
+
+test('patterns: old and new payloads parse; method registry (engine 0.6.0)', async () => {
+  const window = { start: '2026-04-19', end: '2026-10-15' };
+  const step = { variable: { code: '29463-7', display: 'Body weight' }, need: 'days', missing: 4, within_days: 21, by: '2026-11-05',
+                 entry: 'variable', method: 'trend_theil_sen_mann_kendall', type: 'trend' };
+  const { f, calls } = fake(
+    // older server: no strength, no confidence, no next_steps
+    () => json({ patient: 'Patient/p1', window, engine_version: '0.5.0', time_basis: {}, tests_in_run: 1, family_fingerprint: null,
+                 findings: [{ id: 'pf_1', statistically_supported: false, summary_text: 'Weight showed no clear change.',
+                              method: { name: 'trend_theil_sen_mann_kendall', version: '1.1.0', parameters: {} } }],
+                 not_computed: [{ type: 'trend', variables: [], window, reason: 'insufficient_data', detail: '' }], omitted: [],
+                 interpretation_guidance: 'Not diagnoses.' }),
+    () => json({ patient: 'Patient/p1', window, engine_version: '0.6.0', time_basis: {}, tests_in_run: 1, family_fingerprint: null,
+                 findings: [{ id: 'pf_2', statistically_supported: true, summary_text: 'Systolic blood pressure fell.',
+                              method: { name: 'trend_theil_sen_mann_kendall', version: '1.1.0', parameters: {}, maturity: 'experimental',
+                                        patient_facing: false, notify: false },
+                              confidence: { data_quality: { level: 'medium', coverage: 0.5, regularity: 1, sources: 1, excluded: {}, local_time_share: 1 },
+                                            statistical: { q: 0.01, effect_vs_threshold: 1.4 },
+                                            extraction: { level: 'medium', share_manual: 1, share_device: 0, share_import_or_document: 0, share_clinician: 0 },
+                                            generalizability: 'personal', research: { level: 'none', references: [] } },
+                              disclosure: null }],
+                 not_computed: [{ type: 'trend', variables: [], window, reason: 'insufficient_data', detail: '', next_step: step }],
+                 next_steps: [step], omitted: [], interpretation_guidance: 'Not diagnoses.' }),
+    () => json({ engine_version: '0.6.0', data: [{ name: 'trend_theil_sen_mann_kendall', version: '1.1.0', maturity: 'experimental',
+                                                   patient_facing: false, notify: false }],
+                 maturities: ['experimental', 'internally_validated', 'clinically_reviewed', 'production_approved'],
+                 disclosure: 'Method set with AI help; not reviewed by a clinician.', confidence_rules: {} }),
+  );
+  const a = new Anpheros({ auth: apiKey('sk_test_x'), baseUrl: 'https://api.test', fetch: f });
+  const old = await a.patterns.run('p1');
+  assert.equal(old.findings[0].strength, undefined);
+  assert.equal(old.findings[0].confidence, undefined);
+  assert.equal(old.next_steps, undefined);
+  const fresh = await a.patterns.run('p1');
+  assert.equal(fresh.findings[0].method.maturity, 'experimental');
+  assert.equal(fresh.findings[0].confidence?.data_quality.level, 'medium');
+  assert.equal(fresh.next_steps?.[0].missing, 4);
+  assert.equal(fresh.not_computed[0].next_step?.need, 'days');
+  const methods = await a.patterns.methods();
+  assert.equal(calls[2].url, 'https://api.test/v1/patterns/methods');
+  assert.equal(methods.data[0].maturity, 'experimental');
+});
+
+test('a write with X-Anpheros-Safety calls onSafety, then the crisis lines can be read', async () => {
+  const { f, calls } = fake(
+    () => json({ resourceType: 'QuestionnaireResponse', id: 'qr1' }, 201,
+      { 'x-anpheros-safety': 'crisis-resources', link: '</v1/safety/crisis-resources>; rel="help"' }),
+    () => json({ country: 'US', emergency_number: '911', crisis_line: { name: '988 Suicide & Crisis Lifeline', number: '988' },
+      directory: { name: 'Find A Helpline', url: 'https://findahelpline.com' }, text: 'If you are in danger now, call 911.' }),
+  );
+  const seen: string[] = [];
+  const a = new Anpheros({ auth: apiKey('sk_test_x'), baseUrl: 'https://api.test', fetch: f, onSafety: (s) => seen.push(`${s.value} ${s.link}`) });
+  await a.fhir.create({ resourceType: 'QuestionnaireResponse', status: 'completed' });
+  assert.deepEqual(seen, ['crisis-resources /v1/safety/crisis-resources']);
+  assert.equal(a.lastSafety?.status, 201);
+  const lines = await a.patterns.crisisResources('US');
+  assert.equal(calls[1].url, 'https://api.test/v1/safety/crisis-resources?country=US');
+  assert.equal(lines.crisis_line?.number, '988');
+  assert.equal(seen.length, 1, 'a response without the header does not call onSafety');
+});

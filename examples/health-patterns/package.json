@@ -1,0 +1,15 @@
+{
+  "name": "anpheros-health-patterns",
+  "private": true,
+  "description": "Health patterns end to end on a synthetic sandbox patient: a planted pattern, its evidence, the method registry and the safety header.",
+  "type": "module",
+  "scripts": {
+    "start": "node patterns.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@anpheros/sdk": "^0.2.0"
+  }
+}
