@@ -286,8 +286,11 @@ class Condition {
 
 /// A medication a patient takes or took (FHIR `MedicationStatement`, ATC by default).
 class MedicationInput {
-  const MedicationInput({required this.display, this.code, this.system = 'http://www.whocc.no/atc', this.status = 'active', this.dosage, this.start, this.end, this.note, this.authorType});
+  const MedicationInput({required this.display, this.substance, this.code, this.system = 'http://www.whocc.no/atc', this.status = 'active', this.dosage, this.start, this.end, this.note, this.authorType});
   final String display;
+
+  /// The active substance (INN) as confirmed by the person, e.g. `metformin`.
+  final String? substance;
   final String? code;
   final String? system;
 
@@ -300,6 +303,7 @@ class MedicationInput {
   final AuthorType? authorType;
   Map<String, dynamic> toJson() => {
         'display': display,
+        if (substance != null) 'substance': substance,
         if (code != null) 'code': code,
         if (system != null) 'system': system,
         'status': status,
@@ -313,12 +317,12 @@ class MedicationInput {
 
 /// A stored medication statement of a patient.
 class Medication {
-  Medication({required this.id, required this.patient, required this.display, this.code, this.system, this.status, this.dosage, this.start, this.end, this.note, this.updatedAt, required this.fhir});
+  Medication({required this.id, required this.patient, required this.display, this.substance, this.code, this.system, this.status, this.dosage, this.start, this.end, this.note, this.updatedAt, required this.fhir});
   final String id, patient, display;
-  final String? code, system, status, dosage, start, end, note, updatedAt;
+  final String? substance, code, system, status, dosage, start, end, note, updatedAt;
   final String fhir;
   factory Medication.fromJson(Map<String, dynamic> j) => Medication(
-        id: j['id'] as String, patient: j['patient'] as String, display: j['display'] as String, code: _s(j['code']), system: _s(j['system']),
+        id: j['id'] as String, patient: j['patient'] as String, display: j['display'] as String, substance: _s(j['substance']), code: _s(j['code']), system: _s(j['system']),
         status: _s(j['status']), dosage: _s(j['dosage']), start: _s(j['start']), end: _s(j['end']), note: _s(j['note']),
         updatedAt: _s(j['updated_at']), fhir: j['fhir'] as String);
 }

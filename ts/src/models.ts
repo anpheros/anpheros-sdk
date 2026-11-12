@@ -29,8 +29,8 @@ export interface ConditionInput { code: string; system?: string; display?: strin
 export interface Condition { id: string; patient: string; code: string; system: string | null; display: string | null; clinical_status: string | null; onset: string | null; abatement: string | null; note: string | null; updated_at: string | null; fhir: string }
 
 export type MedStatus = 'active' | 'completed' | 'stopped' | 'on-hold' | 'intended' | 'unknown';
-export interface MedicationInput { display: string; code?: string; system?: string; status?: MedStatus; dosage?: string; start?: string; end?: string; note?: string; author_type?: AuthorType }
-export interface Medication { id: string; patient: string; display: string; code: string | null; system: string | null; status: string | null; dosage: string | null; start: string | null; end: string | null; note: string | null; updated_at: string | null; fhir: string }
+export interface MedicationInput { display: string; substance?: string; code?: string; system?: string; status?: MedStatus; dosage?: string; start?: string; end?: string; note?: string; author_type?: AuthorType }
+export interface Medication { id: string; patient: string; display: string; substance: string | null; code: string | null; system: string | null; status: string | null; dosage: string | null; start: string | null; end: string | null; note: string | null; updated_at: string | null; fhir: string }
 
 export type DocKind = 'lab_report' | 'discharge_summary' | 'prescription' | 'imaging_report' | 'referral' | 'other';
 export interface DocumentInput { title: string; kind?: DocKind; content_type: string; date?: string; description?: string; author_type?: AuthorType }
